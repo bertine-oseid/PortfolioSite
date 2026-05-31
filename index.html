@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Name — Portfolio</title>
+  <meta name="description" content="Personal portfolio, links, and blog" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="src/styles/main.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="site-header">
+      <nav class="nav">
+        <span class="nav-logo">YN</span>
+        <div class="nav-links">
+          <a href="#grid" class="nav-link active" data-page="grid">Home</a>
+          <a href="#blog" class="nav-link" data-page="blog">Blog</a>
+        </div>
+        <a href="preview.html" class="preview-btn" target="_blank" rel="noopener">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 20h8M12 18v2"/></svg>
+          Preview
+        </a>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+          <span class="theme-icon">◑</span>
+        </button>
+      </nav>
+    </header>
+
+    <!-- Grid Page -->
+    <main id="page-grid" class="page active">
+      <div class="bento-grid" id="bentoGrid"></div>
+    </main>
+
+    <!-- Blog Page -->
+    <main id="page-blog" class="page">
+      <div class="blog-container">
+        <div class="blog-header">
+          <h1 class="blog-title">Writing</h1>
+          <p class="blog-subtitle">Thoughts, essays, and notes</p>
+        </div>
+        <div class="blog-list" id="blogList"></div>
+      </div>
+    </main>
+
+    <!-- Blog Post Page -->
+    <main id="page-post" class="page">
+      <div class="post-container">
+        <button class="back-btn" id="backBtn">← Back to writing</button>
+        <article id="postContent"></article>
+      </div>
+    </main>
+  </div>
+
+  <script src="src/data/config.js"></script>
+  <script src="src/data/blog-posts.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="src/components/grid.js"></script>
+  <script src="src/components/blog.js"></script>
+  <script src="src/app.js"></script>
+</body>
+</html>
