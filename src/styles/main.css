@@ -7,9 +7,9 @@
   --accent-light: #fff7ed;
   --accent-dark: #c2410c;
 
-  --bg: #f5f4f0;
+  --bg: #f5f6f8;
   --bg-card: #ffffff;
-  --bg-card-hover: #fafaf9;
+  --bg-card-hover: #fafafa;
   --bg-dark: #111110;
 
   --text-primary: #1c1917;
@@ -23,13 +23,17 @@
   --radius-md: 18px;
   --radius-lg: 24px;
 
-  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-hover: 0 4px 16px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06);
+  --shadow: 0 1px 3px rgba(0,0,0,0.02),
+            0 4px 12px rgba(0,0,0,0.03),
+            0 12px 24px rgba(0,0,0,0.04);
+  --shadow-hover: 0 2px 6px rgba(0,0,0,0.03),
+                  0 8px 20px rgba(0,0,0,0.04),
+                  0 16px 32px rgba(0,0,0,0.05);
 
-  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-sans: 'Poppins', sans-serif;
   --font-serif: 'Instrument Serif', Georgia, serif;
 
-  --grid-col: 180px;
+  --grid-col: 160px;
   --grid-gap: 14px;
   --grid-max: 800px;
 
@@ -52,7 +56,9 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+}
 
 body {
   font-family: var(--font-sans);
@@ -82,7 +88,7 @@ body {
   height: 100%;
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
 }
 
 .nav-logo {
@@ -124,7 +130,7 @@ body {
 }
 .preview-btn:hover { color: var(--text-primary); border-color: var(--border-hover); background: var(--border); }
 
-
+.theme-toggle {
   width: 36px; height: 36px;
   border-radius: 50%;
   border: 1px solid var(--border);
@@ -137,18 +143,130 @@ body {
 }
 .theme-toggle:hover { border-color: var(--border-hover); color: var(--text-primary); }
 
+/* ---- NAV: EDIT MODE TOGGLE ---- */
+.nav-edit-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  position: relative;
+}
+
+.nav-edit-toggle:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+}
+
+/* Active indicator dot — hidden by default */
+.nav-edit-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: none;
+  flex-shrink: 0;
+}
+
+/* When edit mode is on: accent border + dot appears */
+.nav-edit-toggle.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
+.nav-edit-toggle.is-active .nav-edit-dot {
+  display: block;
+}
+
+[data-theme="dark"] .nav-edit-toggle.is-active {
+  background: rgba(249, 115, 22, 0.15);
+}
+
+/* ---- APP WRAPPER ---- */
+#app {
+  display: block;
+}
+
 /* ---- PAGES ---- */
-.page { display: none; }
+.page        { display: none; }
 .page.active { display: block; }
+
+/* ---- TWO-COLUMN LAYOUT ---- */
+.portfolio-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 48px;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 52px 28px 120px;
+}
+
+/* ---- PROFILE SIDEBAR ---- */
+.profile-sidebar {
+  width: 210px;
+  flex-shrink: 0;
+  position: sticky;
+  top: calc(var(--nav-h) + 32px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.sidebar-avatar {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 36px;
+  font-style: italic;
+  color: #fff;
+  margin-bottom: 22px;
+  flex-shrink: 0;
+}
+.sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.sidebar-name {
+  font-family: var(--font-serif);
+  font-size: 34px;
+  font-style: italic;
+  line-height: 1.1;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.sidebar-tagline {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+/* ---- PORTFOLIO CONTENT WRAPPER ---- */
+.portfolio-content {
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 0;
+}
 
 /* ---- BENTO GRID ---- */
 .bento-grid {
-  max-width: var(--grid-max);
-  margin: 32px auto;
-  padding: 0 20px 60px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: var(--grid-col);
+  grid-auto-rows: 160px;
   gap: var(--grid-gap);
 }
 
@@ -157,15 +275,18 @@ body {
   border-radius: var(--radius-md);
   background: var(--bg-card);
   border: 1px solid var(--border);
+  box-shadow: var(--shadow);
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   cursor: default;
   position: relative;
 }
-.tile.clickable { cursor: pointer; }
-.tile.clickable:hover {
+.tile:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-hover);
+}
+.tile.clickable { cursor: pointer; }
+.tile.clickable:hover {
   border-color: var(--border-hover);
 }
 .tile.clickable:active { transform: translateY(0); }
@@ -205,7 +326,61 @@ body {
   line-height: 1.1;
 }
 .profile-handle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
-.profile-tagline { font-size: 14px; color: var(--text-secondary); margin-top: 8px; line-height: 1.5; }
+.profile-tagline { font-size: 14px; color: var(--text-secondary); margin-top: 8px; line-height: 1.5; white-space: pre-line; }
+.profile-info { min-width: 0; }
+
+/* Profile card: column layout when narrow (1×2 or 1×1)
+   NOTE: data-size lives on the SAME element as .tile-profile,
+   so we target it directly, not as a descendant. */
+.tile-profile[data-size="1x2"],
+.tile-profile[data-size="1x1"] {
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: center !important;
+  padding: 20px !important;
+  gap: 0 !important;
+  overflow: hidden !important;
+}
+.tile-profile[data-size="1x2"] .profile-avatar,
+.tile-profile[data-size="1x1"] .profile-avatar {
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+.tile-profile[data-size="1x2"] .profile-info,
+.tile-profile[data-size="1x1"] .profile-info {
+  width: 100%;
+  overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Slightly tighter typography inside the narrow 1×2 profile card */
+.tile-profile[data-size="1x2"] .profile-name {
+  font-size: 18px;
+}
+.tile-profile[data-size="1x2"] .profile-tagline {
+  font-size: 12px;
+  margin-top: 6px;
+}
+.tile-profile[data-size="1x2"] .profile-handle {
+  font-size: 12px;
+}
+
+/* Profile card: row layout when wide (2×2 or 2×1) */
+.tile-profile[data-size="2x2"],
+.tile-profile[data-size="2x1"] {
+  flex-direction: row !important;
+  align-items: center !important;
+  text-align: left !important;
+  gap: 18px !important;
+  padding: 24px 28px !important;
+}
+.tile-profile[data-size="2x2"] .profile-info,
+.tile-profile[data-size="2x1"] .profile-info {
+  width: auto;
+  word-wrap: normal;
+}
 
 /* ---- TILE: SOCIAL ---- */
 .tile-social {
@@ -282,6 +457,9 @@ body {
 }
 .tile-text.quote-style {
   background: var(--accent);
+}
+.tile-text .tile-text-content {
+  white-space: pre-wrap;
 }
 .tile-text.quote-style .tile-text-content {
   font-family: var(--font-serif);
@@ -445,10 +623,45 @@ article pre code { background: none; padding: 0; }
 article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
 
 /* ---- RESPONSIVE ---- */
-@media (max-width: 700px) {
+/*
+ * Breakpoints mapped to standard aspect ratios:
+ *   Desktop  16:9  — 1920 × 1080  (grid at full width)
+ *   Tablet        — ≤ 1024px      (2-col fallback)
+ *   Mobile   9:16  — ≤ 768px      (2-col, 160px rows)
+ *   Small mobile  — ≤ 420px       (2-col, 140px rows, tighter gap)
+ */
+@media (max-width: 768px) {
+  /* Stack layout vertically on mobile */
+  .portfolio-layout {
+    flex-direction: column;
+    gap: 24px;
+    padding: 28px 16px 120px;
+  }
+
+  /* Sidebar becomes a compact horizontal strip */
+  .profile-sidebar {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+    position: static;
+  }
+  .sidebar-avatar {
+    width: 72px;
+    height: 72px;
+    font-size: 22px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+  .sidebar-name    { font-size: 22px; margin-bottom: 4px; }
+  .sidebar-tagline { font-size: 13px; }
+
   .bento-grid {
     grid-template-columns: repeat(2, 1fr);
     grid-auto-rows: 160px;
+  }
+  .portfolio-content {
+    padding-bottom: 240px !important;
   }
   .tile[data-size="2x2"] { grid-column: span 2; grid-row: span 2; }
 }
@@ -566,4 +779,1144 @@ article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
   color: #fff;
   border-color: rgba(255,255,255,0.5);
   background: rgba(255,255,255,0.08);
+}
+
+/* ============================================================
+   LANGUAGE TOGGLE
+   ============================================================ */
+.lang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  user-select: none;
+}
+
+.lang-opt {
+  background: none;
+  border: none;
+  padding: 2px 5px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  transition: color 0.15s, background 0.15s;
+  line-height: 1;
+}
+
+.lang-opt.active {
+  color: var(--text-primary);
+  background: var(--bg);
+}
+
+.lang-opt:hover:not(.active) {
+  color: var(--text-secondary);
+}
+
+.lang-sep {
+  color: var(--border-hover);
+  font-size: 11px;
+  line-height: 1;
+}
+
+/* ============================================================
+   ADMIN EDIT MODE
+   ============================================================ */
+
+/* Sidebar text fields — reuse the same dashed-outline treatment as tile fields */
+.admin-mode .sidebar-name,
+.admin-mode .sidebar-tagline {
+  border-radius: 4px;
+  transition: outline 0.15s;
+}
+
+/* Sidebar avatar — edit ring + camera hint on hover */
+.admin-mode .sidebar-avatar.sidebar-avatar-editable {
+  cursor: pointer;
+  outline: 2px dashed transparent;
+  outline-offset: 4px;
+  transition: outline-color 0.2s;
+  position: relative;
+}
+.admin-mode .sidebar-avatar.sidebar-avatar-editable:hover {
+  outline-color: var(--accent);
+}
+
+/* Avatar edit popover */
+.avatar-edit-popover {
+  position: absolute;
+  z-index: 500;
+  width: 290px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-hover);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.aep-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.aep-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.aep-input:focus { border-color: var(--accent); }
+.aep-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: -2px;
+}
+.aep-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.aep-btn {
+  flex: 1;
+  padding: 7px 0;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-primary);
+  transition: background 0.15s, border-color 0.15s;
+}
+.aep-save {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.aep-save:hover   { background: var(--accent-dark); border-color: var(--accent-dark); }
+.aep-cancel:hover { background: var(--bg-card-hover); }
+
+.i18n-editable {
+  border-radius: 4px;
+  outline: 2px dashed transparent;
+  outline-offset: 2px;
+  transition: outline-color 0.15s;
+  cursor: text;
+}
+
+.admin-mode .i18n-editable:hover {
+  outline-color: var(--accent);
+  background: var(--accent-light);
+}
+
+[contenteditable="true"] {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px;
+  border-radius: 4px;
+  background: var(--accent-light) !important;
+}
+
+/* ============================================================
+   SYNC CONFIRMATION DIALOG
+   ============================================================ */
+.i18n-sync-dialog {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  animation: slideUp 0.25s ease;
+  max-width: 340px;
+  width: calc(100vw - 48px);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.i18n-sync-inner {
+  background: var(--bg-card);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-hover);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.i18n-sync-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.i18n-sync-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.i18n-sync-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.i18n-sync-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.i18n-btn {
+  flex: 1;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-hover);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.i18n-btn-yes {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.i18n-btn-yes:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+.i18n-btn-no {
+  background: var(--bg-card);
+  color: var(--text-secondary);
+}
+
+.i18n-btn-no:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+}
+
+/* ============================================================
+   TOAST NOTIFICATION
+   ============================================================ */
+.i18n-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--text-primary);
+  color: var(--bg);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 999px;
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.i18n-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ============================================================
+   ADMIN TOGGLE BUTTON (fixed corner)
+   ============================================================ */
+.admin-toggle-btn {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9990;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px 9px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--border-hover);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow-hover);
+  transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+  user-select: none;
+}
+
+.admin-toggle-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+
+/* Edit state (not admin) */
+.admin-toggle-btn .icon-done,
+.admin-toggle-btn .toggle-label-done { display: none; }
+.admin-toggle-btn .icon-edit,
+.admin-toggle-btn .toggle-label-edit { display: inline; }
+
+/* Done state (admin active) */
+.admin-toggle-btn.is-admin {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(249,115,22,0.35);
+}
+.admin-toggle-btn.is-admin .icon-edit,
+.admin-toggle-btn.is-admin .toggle-label-edit { display: none; }
+.admin-toggle-btn.is-admin .icon-done,
+.admin-toggle-btn.is-admin .toggle-label-done { display: inline; }
+.admin-toggle-btn.is-admin:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+  color: #fff;
+}
+
+/* ============================================================
+   DRAG AND DROP (admin mode)
+   ============================================================ */
+
+/* Grab cursor on all tiles in admin mode */
+.admin-mode #bentoGrid .tile {
+  cursor: grab;
+}
+.admin-mode #bentoGrid .tile:active {
+  cursor: grabbing;
+}
+
+/* Ghost — the placeholder hole while dragging */
+.tile-ghost {
+  opacity: 0.35;
+  background: var(--accent-light) !important;
+  border: 2px dashed var(--accent) !important;
+  border-radius: var(--radius-md);
+}
+
+/* The tile being dragged */
+.tile-dragging {
+  opacity: 0;
+}
+
+/* The selected tile (mouse down, before move starts) */
+.tile-chosen {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18) !important;
+  border-color: var(--accent) !important;
+  transform: scale(1.02);
+  z-index: 100;
+}
+
+/* ============================================================
+   NAMED SIZE CLASSES (aliases for data-size grid spans)
+   ============================================================ */
+.size-small, .tile[data-size="1x1"] { grid-column: span 1; grid-row: span 1; }
+.size-wide,  .tile[data-size="2x1"] { grid-column: span 2; grid-row: span 1; }
+.size-tall,  .tile[data-size="1x2"] { grid-column: span 1; grid-row: span 2; }
+.size-big,   .tile[data-size="2x2"] { grid-column: span 2; grid-row: span 2; }
+
+/* ============================================================
+   SMART VIDEO / IMAGE FITTING
+   Ensures media fills any tile shape without warping.
+   ============================================================ */
+.tile img,
+.tile video.video-el {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Embedded iframes (YouTube/Vimeo) already use .video-embed-wrap
+   for the padding-bottom aspect-ratio trick — keep that intact
+   but let it stretch to fill tall/big tiles. */
+.tile[data-size="1x2"] .video-embed-wrap,
+.tile[data-size="2x2"] .video-embed-wrap {
+  padding-bottom: 0;
+  flex: 1;
+  position: relative;
+}
+.tile[data-size="1x2"] .tile-video,
+.tile[data-size="2x2"] .tile-video {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================
+   ADMIN CONTROLS STRIP (bottom-left, appears on tile hover)
+   ============================================================ */
+
+/* Horizontal row of icon buttons, bottom-left of each tile */
+.admin-controls {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;       /* buttons always stay on one row */
+  gap: 5px;                /* explicit spacing — never collapse */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+
+.admin-mode .tile:hover .admin-controls {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Shared icon button base — fixed dimensions guarantee no overlap */
+.ac-btn {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;         /* prevent flex from squeezing buttons together */
+  max-width: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border-hover);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+  flex-grow: 0;            /* never stretch — keeps targets distinct */
+  padding: 0;
+}
+
+.ac-resize-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.ac-edit-btn:hover   { background: var(--bg-card-hover); color: var(--text-primary); }
+.ac-delete-btn:hover { background: #fee2e2; border-color: #ef4444; color: #ef4444; }
+
+/* Size portal — fixed to viewport, bypasses tile overflow:hidden */
+.size-portal {
+  position: fixed;
+  z-index: 9999;
+  background: var(--bg-card);
+  border: 1px solid var(--border-hover);
+  border-radius: 12px;
+  box-shadow: var(--shadow-hover), 0 0 0 1px rgba(0,0,0,0.04);
+  padding: 5px;
+  min-width: 130px;
+  flex-direction: column;
+  gap: 2px;
+  display: none;
+}
+.size-portal.open { display: flex; }
+
+.ac-size-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: background 0.12s, color 0.12s;
+  width: 100%;
+  text-align: left;
+}
+.ac-size-opt:hover  { background: var(--bg); color: var(--text-primary); }
+.ac-size-opt.active { background: var(--accent-light); color: var(--accent); }
+.ac-size-hint {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.ac-size-opt.active .ac-size-hint { color: var(--accent); opacity: 0.7; }
+
+/* ============================================================
+   UNIFIED ADMIN CONTROL BAR
+   Single fixed strip at the bottom — dock centred, Done button right.
+   Mathematically prevents any collision between the two.
+   ============================================================ */
+
+/* The bar itself — always present, only meaningful in admin mode */
+.admin-control-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 24px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  z-index: 9990;
+  /* Hidden in public view — shown only when editing */
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+/* Show bar only when admin mode is active */
+.admin-mode .admin-control-bar {
+  opacity: 1;
+  pointer-events: all;
+}
+
+[data-theme="dark"] .admin-control-bar {
+  background: rgba(28, 28, 27, 0.92);
+}
+
+/* Left slot — mirrors right slot width to keep dock perfectly centred */
+.admin-bar-left {
+  flex: 1;
+}
+
+/* Right slot — Edit/Done toggle + Add Box */
+.admin-bar-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Add Box button */
+.add-box-btn {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px 8px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border-hover);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.admin-mode .add-box-btn { display: flex; }
+.add-box-btn:hover {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  color: var(--bg);
+}
+
+/* The Edit/Done toggle — no longer independently positioned */
+.admin-toggle-btn {
+  position: static;   /* removed from fixed flow — bar handles placement */
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px 9px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--border-hover);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   MODALS — shared base styles
+   ============================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(12px);
+  transition: transform 0.2s;
+}
+.modal-overlay.open .modal-box {
+  transform: translateY(0);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 24px 0;
+}
+.modal-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.modal-close {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: var(--bg);
+  color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.modal-close:hover { background: var(--border); color: var(--text-primary); }
+
+.modal-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  padding: 0 24px 22px;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  padding: 9px 20px;
+  border-radius: 10px;
+  border: 1px solid var(--border-hover);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.modal-btn-cancel {
+  background: var(--bg-card);
+  color: var(--text-secondary);
+}
+.modal-btn-cancel:hover { background: var(--bg); }
+.modal-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.modal-btn-primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+
+/* ============================================================
+   FORM ELEMENTS (used inside modals)
+   ============================================================ */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.form-optional {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.form-input {
+  width: 100%;
+  padding: 9px 13px;
+  border-radius: 10px;
+  border: 1px solid var(--border-hover);
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.form-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(249,115,22,0.12);
+}
+.form-textarea { resize: vertical; min-height: 96px; line-height: 1.5; }
+.form-select {
+  width: 100%;
+  padding: 9px 13px;
+  border-radius: 10px;
+  border: 1px solid var(--border-hover);
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2378716c' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  padding-right: 36px;
+  transition: border-color 0.15s;
+}
+.form-select:focus { border-color: var(--accent); }
+.form-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-top: 2px;
+}
+.form-error {
+  font-size: 13px;
+  color: #e53e3e;
+  min-height: 18px;
+}
+
+/* Size button group (inside Add Box modal) */
+.size-btn-group {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.size-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border-hover);
+  background: var(--bg);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.size-btn span {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+.size-btn:hover { background: var(--bg-card-hover); border-color: var(--accent); }
+.size-btn.active {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.size-btn.active span { color: var(--accent); opacity: 0.7; }
+
+/* ============================================================
+   THUMBNAIL BACKGROUND (link + video tiles)
+   ============================================================ */
+.tile.has-thumbnail {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Dark gradient overlay so text stays readable */
+.tile-thumb-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.65) 0%,
+    rgba(0,0,0,0.25) 50%,
+    rgba(0,0,0,0.05) 100%
+  );
+  z-index: 0;
+  border-radius: inherit;
+}
+
+/* Lift text above the overlay */
+.tile.has-thumbnail .link-emoji,
+.tile.has-thumbnail .link-text,
+.tile.has-thumbnail .arrow,
+.tile.has-thumbnail .video-overlay-bar,
+.tile.has-thumbnail .admin-controls {
+  position: relative;
+  z-index: 1;
+}
+
+/* Invert text colour for readability on photo background */
+.tile.has-thumbnail .link-label,
+.tile.has-thumbnail .link-desc { color: rgba(255,255,255,0.95); }
+.tile.has-thumbnail .arrow      { color: rgba(255,255,255,0.8); }
+
+/* ============================================================
+   CREATION DOCK — sits in the centre of .admin-control-bar
+   ============================================================ */
+.creation-dock {
+  /* No fixed positioning — the bar handles placement */
+  position: static;
+  display: none;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-hover);
+  border-radius: 999px;
+  padding: 6px 12px;
+  box-shadow: var(--shadow);
+  flex-shrink: 0;
+}
+
+.admin-mode .creation-dock { display: flex; }
+
+.dock-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding-right: 2px;
+}
+
+.dock-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--border-hover);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.dock-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  min-width: 46px;
+  white-space: nowrap;
+}
+
+.dock-btn svg { flex-shrink: 0; }
+
+.dock-btn:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+/* ============================================================
+   SMART SOCIAL — platform detection preview
+   ============================================================ */
+.platform-preview {
+  font-size: 12px;
+  color: var(--text-muted);
+  min-height: 16px;
+}
+.platform-preview.detected {
+  color: #16a34a;
+  font-weight: 500;
+}
+
+/* Behance brand colour */
+.tile-social[data-platform="behance"] .platform-icon { background: #e8efff; color: #0057ff; }
+
+/* ============================================================
+   DIVIDER TILE
+   ============================================================ */
+.tile-divider {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+}
+
+.tile-divider.divider-blank {
+  /* fully invisible — just a spacer */
+  pointer-events: none;
+}
+
+.admin-mode .tile-divider.divider-blank {
+  border: 2px dashed var(--border) !important;
+  border-radius: var(--radius-md);
+  background: transparent !important;
+  pointer-events: auto;
+  opacity: 0.4;
+}
+
+.divider-inner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.divider-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--border-hover);
+  display: block;
+}
+
+.divider-rule.full { flex: 1 0 100%; }
+
+.divider-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   LOCATION TILE
+   ============================================================ */
+.tile-location {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  padding: 0;
+}
+
+.location-map {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+.location-map-svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.location-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 18px 20px;
+  background: linear-gradient(to top,
+    rgba(255,255,255,0.96) 0%,
+    rgba(255,255,255,0.7)  60%,
+    transparent 100%);
+}
+
+[data-theme="dark"] .location-content {
+  background: linear-gradient(to top,
+    rgba(17,17,16,0.96) 0%,
+    rgba(17,17,16,0.7)  60%,
+    transparent 100%);
+}
+
+.location-pin {
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.location-city {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.location-country {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.location-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ============================================================
+   ADMIN CONTROL BAR — MOBILE  (@media ≤ 768px / 9:16 portrait)
+   Bar stacks vertically: dock row on top, actions row below.
+   ============================================================ */
+@media (max-width: 768px) {
+
+  /* Stack the bar contents vertically */
+  .admin-control-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 16px 12px;
+  }
+
+  /* On mobile, the left spacer isn't needed (no centring trick) */
+  .admin-bar-left { display: none; }
+
+  /* Dock fills the full width on mobile */
+  .creation-dock {
+    width: 100%;
+    border-radius: 14px;
+    padding: 6px 8px;
+    justify-content: space-around;
+    flex-wrap: nowrap;
+    gap: 0;
+  }
+
+  /* Hide text label + divider — icons only on mobile */
+  .dock-label,
+  .dock-divider { display: none; }
+
+  /* Compact dock buttons */
+  .dock-btn {
+    padding: 5px 6px;
+    font-size: 9px;
+    min-width: 44px;
+    gap: 2px;
+  }
+
+  .dock-btn svg { width: 14px; height: 14px; }
+
+  /* Actions row: Add Box + Done, pushed to the right */
+  .admin-bar-right {
+    flex: none;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  /* Slightly smaller text on mobile */
+  .admin-toggle-btn,
+  .add-box-btn {
+    font-size: 12px;
+    padding: 8px 14px;
+  }
+}
+
+/* ============================================================
+   EDIT MODE CURSOR BUBBLE
+   Temporary 5-second tooltip injected on admin entry (desktop only).
+   Matches the nav Edit button's visual language.
+   pointer-events: none ensures it never blocks clicks.
+   ============================================================ */
+.edit-cursor-bubble {
+  position: fixed;
+  z-index: 99999;
+  pointer-events: none !important;
+
+  /* Matches nav Edit button — white pill with orange accent border */
+  background: var(--bg-card);
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  padding: 6px 13px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 12px rgba(249,115,22,0.18), 0 1px 4px rgba(0,0,0,0.08);
+  letter-spacing: 0.02em;
+  opacity: 1;
+}
+
+/* Tiny orange tail pointing up toward the cursor */
+.edit-cursor-bubble::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 12px;
+  border: 6px solid transparent;
+  border-bottom-color: var(--accent);
+  border-top: none;
+}
+
+/* Inner white fill for the tail (matches card background) */
+.edit-cursor-bubble::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 13.5px;
+  border: 4.5px solid transparent;
+  border-bottom-color: var(--bg-card);
+  border-top: none;
+}
+
+/* Dark mode variant */
+[data-theme="dark"] .edit-cursor-bubble {
+  background: var(--bg-card);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+[data-theme="dark"] .edit-cursor-bubble::after {
+  border-bottom-color: var(--bg-card);
+}
+
+/* ── Hide on touch / mobile — cursor doesn't exist there ── */
+@media (pointer: coarse) {
+  .edit-cursor-bubble { display: none !important; }
 }

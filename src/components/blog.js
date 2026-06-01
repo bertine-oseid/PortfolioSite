@@ -1,17 +1,22 @@
 // ============================================================
 //  BLOG — renders post list and individual post pages
+//  Uses I18N.currentPosts() so content reflects active language.
 // ============================================================
 
 function formatDate(str) {
+  const lang   = I18N.activeLang();
+  const locale = lang === 'no' ? 'nb-NO' : 'en-GB';
   const d = new Date(str + 'T00:00:00');
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  return d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 function buildBlogList() {
   const list = document.getElementById('blogList');
   if (!list) return;
 
-  const html = BLOG_POSTS.map(post => `
+  const posts = I18N.currentPosts();
+
+  const html = posts.map(post => `
     <article class="blog-card" onclick="navigateToPost('${post.id}')">
       <div class="blog-card-meta">
         <span class="blog-card-date">${formatDate(post.date)}</span>
@@ -28,7 +33,8 @@ function buildBlogList() {
 }
 
 function buildPost(id) {
-  const post = BLOG_POSTS.find(p => p.id === id);
+  const posts = I18N.currentPosts();
+  const post  = posts.find(p => p.id === id);
   if (!post) return;
 
   const content = document.getElementById('postContent');
@@ -52,4 +58,4 @@ function buildPost(id) {
 }
 
 window.buildBlogList = buildBlogList;
-window.buildPost = buildPost;
+window.buildPost     = buildPost;
