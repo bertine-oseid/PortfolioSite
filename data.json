@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "_note": "Portfolio saved state. In Edit Mode click 'Export', then commit this file to GitHub to sync across all devices.",
+
+  "lang": null,
+  "avatar": null,
+
+  "overrides": {
+    "no": {},
+    "en": {}
+  },
+
+  "layout": {
+    "desktop": [],
+    "mobile": []
+  }
+}

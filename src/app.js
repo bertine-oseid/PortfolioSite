@@ -708,22 +708,23 @@ function getLayoutName() {
   return w <= 768 ? 'mobile' : 'desktop';
 }
 
-function applyLayout(force) {
-  const name = getLayoutName();
-  if (name === activeLayout && !force) return;
-  activeLayout = name;
-
+// ── resolveTiles(layoutName) ──────────────────────────────────
+// Returns the fully-resolved, ordered array of tile objects for a
+// given breakpoint ('desktop' or 'mobile'). This is the single
+// source of truth for what gets rendered — used by both applyLayout()
+// at runtime and Store.exportJson() at export time.
+function resolveTiles(name) {
   const layout = (CONFIG.layouts && CONFIG.layouts[name]) || null;
 
-  // Build tile map: CONFIG tiles + custom tiles, minus any the user has hidden
+  // Build tile map: CONFIG tiles + custom tiles, minus hidden ones
   const hiddenIds = getHiddenTiles();
-  const tileMap = {};
-  CONFIG.tiles.forEach(t => { if (!hiddenIds.has(t.id)) tileMap[t.id] = t; });
+  const tileMap   = {};
+  CONFIG.tiles.forEach(t  => { if (!hiddenIds.has(t.id))  tileMap[t.id] = t;  });
   getCustomTiles().forEach(ct => { if (!hiddenIds.has(ct.id)) tileMap[ct.id] = ct; });
 
-  let orderedTiles;
+  let ordered;
   if (layout) {
-    orderedTiles = layout
+    ordered = layout
       .map(entry => {
         const tile = tileMap[entry.id];
         if (!tile) return null;
@@ -731,38 +732,46 @@ function applyLayout(force) {
       })
       .filter(Boolean);
   } else {
-    orderedTiles = Object.values(tileMap).map(t =>
+    ordered = Object.values(tileMap).map(t =>
       Object.assign({}, t, { size: t.size || '1x1' })
     );
   }
 
-  // Append custom tiles not already covered by the layout definition
-  const layoutIds = new Set(orderedTiles.map(t => t.id));
+  // Append custom tiles not already in the layout definition
+  const layoutIds = new Set(ordered.map(t => t.id));
   getCustomTiles().forEach(ct => {
-    if (!layoutIds.has(ct.id)) {
-      orderedTiles.push(Object.assign({}, ct, { size: ct.size || '1x1' }));
-    }
+    if (!layoutIds.has(ct.id)) ordered.push(Object.assign({}, ct, { size: ct.size || '1x1' }));
   });
 
-  // Apply saved custom order
+  // Apply saved drag-drop order for this breakpoint
   const savedOrder = getLayoutOrder(name);
   if (savedOrder && savedOrder.length) {
-    const tileById = {};
-    orderedTiles.forEach(t => { tileById[t.id] = t; });
-    const reordered = savedOrder.map(id => tileById[id]).filter(Boolean);
-    orderedTiles.forEach(t => { if (!savedOrder.includes(t.id)) reordered.push(t); });
-    orderedTiles = reordered;
+    const byId      = {};
+    ordered.forEach(t => { byId[t.id] = t; });
+    const reordered = savedOrder.map(id => byId[id]).filter(Boolean);
+    ordered.forEach(t => { if (!savedOrder.includes(t.id)) reordered.push(t); });
+    ordered = reordered;
   }
 
-  // Apply saved size overrides (per breakpoint)
+  // Apply saved size overrides for this breakpoint
   const savedSizes = getTileSizes(name);
   if (Object.keys(savedSizes).length) {
-    orderedTiles = orderedTiles.map(t =>
+    ordered = ordered.map(t =>
       savedSizes[t.id] ? Object.assign({}, t, { size: savedSizes[t.id] }) : t
     );
   }
 
-  buildGrid(orderedTiles);
+  return ordered;
+}
+
+// Expose so store.js can call resolveTiles() at export time
+window.resolveTiles = resolveTiles;
+
+function applyLayout(force) {
+  const name = getLayoutName();
+  if (name === activeLayout && !force) return;
+  activeLayout = name;
+  buildGrid(resolveTiles(name));
 }
 
 // Re-render instantly on breakpoint crossing, debounce for mid-range resizes
@@ -945,7 +954,40 @@ function openAvatarEditor(e) {
   }, 0);
 }
 
+// ── Export button ─────────────────────────────────────────────
+document.getElementById('exportDataBtn')?.addEventListener('click', () => {
+  if (window.Store) Store.exportJson();
+});
+
 // ── Init ──────────────────────────────────────────────────────
-updateProfileSidebar();
-applyLayout();
-handleInitialHash();
+(async function loadPortfolioData() {
+  let renderedFromJson = false;
+
+  if (window.Store) {
+    const jsonData = await Store.init(); // fetch data.json; returns parsed JSON or null
+
+    if (jsonData) {
+      // Seed localStorage meta from data.json (lang, avatar, overrides)
+      // so that profile sidebar and i18n pick them up before rendering.
+      updateProfileSidebar();
+
+      // Feed the tile array for the current breakpoint directly into
+      // the grid renderer — this is the primary, JSON-driven render path.
+      const layoutName = getLayoutName();
+      const tiles = jsonData.layout?.[layoutName];
+      if (Array.isArray(tiles) && tiles.length) {
+        activeLayout = layoutName; // tell applyLayout the layout is already applied
+        buildGrid(tiles);
+        renderedFromJson = true;
+      }
+    }
+  }
+
+  // Fallback: no data.json tiles found — render from localStorage + CONFIG as normal
+  if (!renderedFromJson) {
+    updateProfileSidebar();
+    applyLayout();
+  }
+
+  handleInitialHash();
+})();

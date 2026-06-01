@@ -111,6 +111,62 @@ function renderBlogPreview(tile) {
     </div>`;
 }
 
+// ── Inline editing for custom tile text fields ─────────────────
+// Custom tiles don't go through i18n, so they get their own editable
+// wiring. On blur the new text is persisted via updateCustomTile().
+function makeCustomEditable(el) {
+  const tileId = el.dataset.ceTileId;
+  const field  = el.dataset.ceField;
+  if (!tileId || !field) return;
+
+  el.classList.add('i18n-editable');
+  el.title = 'Click to edit';
+
+  el.addEventListener('click', function handler(e) {
+    if (el.isContentEditable) return; // already in edit mode
+    e.stopPropagation();
+    const original = el.textContent;
+
+    el.contentEditable = 'true';
+    el.focus();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+
+    el.addEventListener('paste', function onPaste(ev) {
+      ev.preventDefault();
+      document.execCommand('insertText', false,
+        ev.clipboardData.getData('text/plain'));
+    });
+
+    el.addEventListener('blur', function save() {
+      el.removeEventListener('blur', save);
+      el.contentEditable = 'false';
+      const newVal = el.innerText.trim();
+      if (newVal !== original.trim()) {
+        if (typeof window.updateCustomTile === 'function') {
+          window.updateCustomTile(tileId, { [field]: newVal });
+        }
+        I18N.showToast('Saved');
+      }
+    });
+
+    el.addEventListener('keydown', function onKey(ev) {
+      if (ev.key === 'Enter' && !ev.shiftKey) {
+        ev.preventDefault();
+        el.blur();
+        el.removeEventListener('keydown', onKey);
+      }
+      if (ev.key === 'Escape') {
+        el.innerText = original;
+        el.blur();
+        el.removeEventListener('keydown', onKey);
+      }
+    });
+  });
+}
+
 function buildGrid(orderedTiles) {
   const grid = document.getElementById('bentoGrid');
   if (!grid) return;
@@ -140,6 +196,10 @@ function buildGrid(orderedTiles) {
   if (I18N.isAdminMode()) {
     grid.querySelectorAll('[data-i18n-field]').forEach(el => {
       I18N.makeEditable(el, el.dataset.i18nField);
+    });
+    // Wire inline editing for custom tile text fields
+    grid.querySelectorAll('[data-ce-field]').forEach(el => {
+      makeCustomEditable(el);
     });
     // Block accidental navigation clicks in admin mode, but let admin
     // buttons (.ac-btn) pass through so delete/edit always work.
@@ -336,13 +396,15 @@ function renderVideo(tile) {
     ? ` style="background-image:url('${tile.thumbnail}');background-size:cover;background-position:center;"`
     : '';
 
+  const tileId = tile.id || '';
+
   if (embedUrl) {
     return `
-      <div class="tile tile-video" data-size="${tile.size}" data-tile-id="${tile.id || ''}" data-embed="true">
+      <div class="tile tile-video" data-size="${tile.size}" data-tile-id="${tileId}" data-embed="true">
         <div class="video-embed-wrap">
           <iframe src="${embedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" title="${label || 'Video'}"></iframe>
         </div>
-        <div class="video-overlay-bar"><span class="video-label">${label}</span>${linkBtn}</div>
+        <div class="video-overlay-bar"><span class="video-label" data-ce-tile-id="${tileId}" data-ce-field="label">${label}</span>${linkBtn}</div>
       </div>`;
   }
 
@@ -351,12 +413,12 @@ function renderVideo(tile) {
   const poster = (tile.poster || tile.thumbnail) ? `poster="${tile.poster || tile.thumbnail}"` : '';
   const id   = 'vid_' + Math.random().toString(36).slice(2, 8);
   return `
-    <div class="tile tile-video${hasThumb ? ' has-thumbnail' : ''}" data-size="${tile.size}" data-tile-id="${tile.id || ''}" data-embed="false"${thumbAttr} onclick="toggleVideo('${id}')">
+    <div class="tile tile-video${hasThumb ? ' has-thumbnail' : ''}" data-size="${tile.size}" data-tile-id="${tileId}" data-embed="false"${thumbAttr} onclick="toggleVideo('${id}')">
       <video id="${id}" class="video-el" ${poster} muted loop playsinline preload="metadata"><source src="${src}" type="video/${ext}"></video>
       <div class="video-play-overlay" id="ov_${id}">
         <div class="video-play-btn" aria-label="Play video"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg></div>
       </div>
-      <div class="video-overlay-bar"><span class="video-label">${label}</span>${linkBtn}</div>
+      <div class="video-overlay-bar"><span class="video-label" data-ce-tile-id="${tileId}" data-ce-field="label">${label}</span>${linkBtn}</div>
     </div>`;
 }
 
@@ -378,16 +440,17 @@ window.toggleVideo = toggleVideo;
 
 // ── Divider tile ──────────────────────────────────────────────
 function renderDivider(tile) {
-  const blank = tile.style === 'blank';
-  const text  = tile.content || '';
+  const blank  = tile.style === 'blank';
+  const text   = tile.content || '';
+  const tileId = tile.id || '';
   return `
     <div class="tile tile-divider${blank ? ' divider-blank' : ''}"
-         data-size="${tile.size}" data-tile-id="${tile.id || ''}">
+         data-size="${tile.size}" data-tile-id="${tileId}">
       ${blank ? '' : `
         <div class="divider-inner">
           ${text
             ? `<span class="divider-rule"></span>
-               <span class="divider-text">${text}</span>
+               <span class="divider-text" data-ce-tile-id="${tileId}" data-ce-field="content">${text}</span>
                <span class="divider-rule"></span>`
             : `<span class="divider-rule full"></span>`
           }
@@ -417,14 +480,15 @@ function renderLocation(tile) {
   const city    = tile.city    || 'Your City';
   const country = tile.country || '';
   const desc    = tile.description || '';
+  const id      = tile.id || '';
   return `
-    <div class="tile tile-location" data-size="${tile.size}" data-tile-id="${tile.id || ''}">
+    <div class="tile tile-location" data-size="${tile.size}" data-tile-id="${id}">
       <div class="location-map">${MAP_SVG}</div>
       <div class="location-content">
         <div class="location-pin">${PIN_SVG}</div>
-        <div class="location-city">${city}</div>
-        ${country ? `<div class="location-country">${country}</div>` : ''}
-        ${desc    ? `<div class="location-desc">${desc}</div>`       : ''}
+        <div class="location-city"    data-ce-tile-id="${id}" data-ce-field="city">${city}</div>
+        ${country ? `<div class="location-country" data-ce-tile-id="${id}" data-ce-field="country">${country}</div>` : ''}
+        ${desc    ? `<div class="location-desc"    data-ce-tile-id="${id}" data-ce-field="description">${desc}</div>` : ''}
       </div>
     </div>`;
 }
@@ -441,9 +505,9 @@ function renderProfileHeader(tile) {
     <div class="tile tile-profile" data-size="${tile.size}" data-tile-id="${tile.id}">
       <div class="profile-avatar">${avatarHtml}</div>
       <div class="profile-info">
-        <div class="profile-name">${name}</div>
-        ${handle  ? `<div class="profile-handle">${handle}</div>`   : ''}
-        ${tagline ? `<div class="profile-tagline">${tagline}</div>` : ''}
+        <div class="profile-name"    data-ce-tile-id="${tile.id}" data-ce-field="name">${name}</div>
+        ${handle  ? `<div class="profile-handle"  data-ce-tile-id="${tile.id}" data-ce-field="handle">${handle}</div>`   : ''}
+        ${tagline ? `<div class="profile-tagline" data-ce-tile-id="${tile.id}" data-ce-field="tagline">${tagline}</div>` : ''}
       </div>
     </div>`;
 }
@@ -458,8 +522,8 @@ function renderContactCard(tile) {
          onclick="openUrl('${url}')">
       <span class="link-emoji">✉️</span>
       <div class="link-text">
-        <div class="link-label">${label}</div>
-        ${email ? `<div class="link-desc">${email}</div>` : ''}
+        <div class="link-label" data-ce-tile-id="${tile.id}" data-ce-field="label">${label}</div>
+        ${email ? `<div class="link-desc" data-ce-tile-id="${tile.id}" data-ce-field="email">${email}</div>` : ''}
       </div>
       <span class="arrow">↗</span>
     </div>`;

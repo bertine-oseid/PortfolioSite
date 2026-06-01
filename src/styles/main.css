@@ -1313,6 +1313,30 @@ article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
   gap: 10px;
 }
 
+/* Export data.json button — admin mode only */
+.export-data-btn {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px 8px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border-hover);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.admin-mode .export-data-btn { display: flex; }
+.export-data-btn:hover {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  color: var(--bg);
+}
+
 /* Add Box button */
 .add-box-btn {
   display: none;
