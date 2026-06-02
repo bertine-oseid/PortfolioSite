@@ -64,6 +64,8 @@ function enterAdmin() {
 }
 
 function exitAdmin() {
+  // Always kill mobile preview before leaving Edit Mode
+  if (typeof window._resetMobilePreview === 'function') window._resetMobilePreview();
   I18N.setAdminMode(false);
   syncAdminUI();
   applyLayout(true);
@@ -958,6 +960,35 @@ function openAvatarEditor(e) {
 document.getElementById('exportDataBtn')?.addEventListener('click', () => {
   if (window.Store) Store.exportJson();
 });
+
+// ── Mobile Preview toggle ─────────────────────────────────────
+// Adds .mobile-preview-active to the grid container so the CSS
+// reflows current tiles into a 2-column narrow canvas.
+// We deliberately do NOT re-render (no applyLayout call) so every
+// tile that is visible on desktop stays visible in the preview —
+// applyLayout('mobile') would filter through CONFIG.layouts.mobile
+// which only knows about stock tile IDs, dropping any custom tiles.
+(function () {
+  const btn       = document.getElementById('mobilePreviewBtn');
+  const workspace = document.getElementById('page-grid');
+  if (!btn || !workspace) return;
+
+  function resetPreview() {
+    workspace.classList.remove('mobile-preview-active');
+    document.body.classList.remove('mobile-preview-on');
+    btn.classList.remove('is-active');
+  }
+
+  btn.addEventListener('click', () => {
+    const active = workspace.classList.toggle('mobile-preview-active');
+    document.body.classList.toggle('mobile-preview-on', active);
+    btn.classList.toggle('is-active', active);
+    // No re-render — CSS handles the reflow
+  });
+
+  // Expose reset so exitAdmin() can clean up
+  window._resetMobilePreview = resetPreview;
+})();
 
 // ── Init ──────────────────────────────────────────────────────
 (async function loadPortfolioData() {

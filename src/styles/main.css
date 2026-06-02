@@ -115,21 +115,6 @@ body {
 .nav-link:hover { color: var(--text-primary); background: var(--border); }
 .nav-link.active { color: var(--text-primary); background: var(--border); }
 
-.preview-btn {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  text-decoration: none;
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
-}
-.preview-btn:hover { color: var(--text-primary); border-color: var(--border-hover); background: var(--border); }
-
 .theme-toggle {
   width: 36px; height: 36px;
   border-radius: 50%;
@@ -1337,6 +1322,171 @@ article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
   color: var(--bg);
 }
 
+/* Mobile Preview toggle button — admin mode only */
+.mobile-preview-btn {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-hover);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.admin-mode .mobile-preview-btn { display: flex; }
+.mobile-preview-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--text-secondary);
+}
+.mobile-preview-btn.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.mobile-preview-btn.is-active:hover {
+  background: var(--accent-dark, #ea6c0e);
+  border-color: var(--accent-dark, #ea6c0e);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MOBILE PREVIEW — FLOATING CANVAS
+   Mirrors every @media (max-width: 768px) and (max-width: 420px)
+   rule using class-based selectors so the preview is accurate
+   regardless of actual viewport width.
+   !important is used where the base stylesheet uses it, so our
+   overrides always win at any specificity level.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Ambient canvas background ───────────────────────────────── */
+body.admin-mode.mobile-preview-on {
+  background: #eeecea;
+  transition: background 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-theme="dark"] body.admin-mode.mobile-preview-on,
+body.admin-mode.mobile-preview-on[data-theme="dark"] {
+  background: #1c1b1a;
+}
+body.admin-mode.mobile-preview-on .site-header {
+  background: transparent;
+  box-shadow: none;
+  border-bottom-color: transparent;
+}
+
+/* ── Canvas frame ────────────────────────────────────────────── */
+body.admin-mode #page-grid.mobile-preview-active {
+  max-width: 393px;
+  height: 852px;
+  margin: 50px auto;
+  background: var(--bg);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 32px;
+  box-shadow:
+    0 4px 12px  rgba(0, 0, 0, 0.02),
+    0 20px 40px rgba(0, 0, 0, 0.04),
+    0 50px 100px rgba(0, 0, 0, 0.06);
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-theme="dark"] body.admin-mode #page-grid.mobile-preview-active {
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 4px 12px  rgba(0, 0, 0, 0.12),
+    0 20px 40px rgba(0, 0, 0, 0.18),
+    0 50px 100px rgba(0, 0, 0, 0.28);
+}
+body.admin-mode #page-grid.mobile-preview-active::-webkit-scrollbar        { width: 4px; }
+body.admin-mode #page-grid.mobile-preview-active::-webkit-scrollbar-track  { background: transparent; }
+body.admin-mode #page-grid.mobile-preview-active::-webkit-scrollbar-thumb  { background: rgba(0,0,0,0.1); border-radius: 10px; }
+[data-theme="dark"] body.admin-mode #page-grid.mobile-preview-active::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); }
+
+/* ── Mirrors @media (max-width: 768px) ──────────────────────── */
+
+/* Portfolio layout → vertical stack */
+body.admin-mode #page-grid.mobile-preview-active .portfolio-layout {
+  flex-direction: column !important;
+  gap: 24px !important;
+  padding: 28px 16px 220px !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* Sidebar → compact horizontal strip */
+body.admin-mode #page-grid.mobile-preview-active .profile-sidebar {
+  width: 100% !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 16px !important;
+  position: static !important;
+}
+body.admin-mode #page-grid.mobile-preview-active .sidebar-avatar {
+  width: 72px !important;
+  height: 72px !important;
+  font-size: 22px !important;
+  margin-bottom: 0 !important;
+  flex-shrink: 0 !important;
+}
+body.admin-mode #page-grid.mobile-preview-active .sidebar-name    { font-size: 22px !important; margin-bottom: 4px !important; }
+body.admin-mode #page-grid.mobile-preview-active .sidebar-tagline { font-size: 13px !important; }
+
+/* Content area bottom clearance */
+body.admin-mode #page-grid.mobile-preview-active .portfolio-content {
+  padding-bottom: 220px !important;
+}
+
+/* ── Mirrors @media (max-width: 420px) ──────────────────────── */
+/* 393px < 420px so all small-mobile rules must apply too        */
+
+/* Bento grid → 2-column, tight rows and gap */
+body.admin-mode #page-grid.mobile-preview-active .bento-grid {
+  grid-template-columns: repeat(2, 1fr) !important;
+  grid-auto-rows: 140px !important;
+  gap: 10px !important;
+}
+
+/* Profile tile → column layout (overrides the !important row   */
+/* variant that .tile-profile[data-size="2x1/2x2"] sets)        */
+body.admin-mode #page-grid.mobile-preview-active .tile-profile {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  text-align: left !important;
+  gap: 10px !important;
+  padding: 16px 18px !important;
+}
+body.admin-mode #page-grid.mobile-preview-active .tile-profile .profile-avatar {
+  margin-bottom: 0 !important;
+  width: 52px !important;
+  height: 52px !important;
+  font-size: 18px !important;
+}
+body.admin-mode #page-grid.mobile-preview-active .tile-profile .profile-info {
+  width: 100% !important;
+  overflow: hidden !important;
+}
+body.admin-mode #page-grid.mobile-preview-active .tile-profile .profile-name    { font-size: 18px !important; }
+body.admin-mode #page-grid.mobile-preview-active .tile-profile .profile-tagline { font-size: 12px !important; margin-top: 4px !important; }
+body.admin-mode #page-grid.mobile-preview-active .tile-profile .profile-handle  { font-size: 11px !important; }
+
+/* ── Overflow & text wrapping ────────────────────────────────── */
+/* Guarantees nothing punches outside the 393px canvas boundary */
+body.admin-mode #page-grid.mobile-preview-active .tile {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+body.admin-mode #page-grid.mobile-preview-active .tile * {
+  max-width: 100% !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+}
+
 /* Add Box button */
 .add-box-btn {
   display: none;
@@ -1943,4 +2093,95 @@ article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
 /* ── Hide on touch / mobile — cursor doesn't exist there ── */
 @media (pointer: coarse) {
   .edit-cursor-bubble { display: none !important; }
+}
+
+
+/* =====================================================================
+   NUCLEAR MOBILE PREVIEW OVERRIDE
+   Appended at the very bottom so these rules win every specificity
+   battle in the sheet. Uses the ID selector #page-grid (specificity
+   1,0,0) as the root so nothing above can override them.
+   These translate each @media (max-width: 768px / 420px) rule into
+   a class-based equivalent that works at any viewport width.
+   ===================================================================== */
+
+/* 1 — Portfolio wrapper: vertical stack */
+#page-grid.mobile-preview-active .portfolio-layout {
+  flex-direction: column !important;
+  gap: 24px !important;
+  padding: 28px 16px 220px !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* 2 — Sidebar: compact horizontal strip */
+#page-grid.mobile-preview-active .profile-sidebar {
+  width: 100% !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 16px !important;
+  position: static !important;
+}
+#page-grid.mobile-preview-active .sidebar-avatar {
+  width: 72px !important;
+  height: 72px !important;
+  font-size: 22px !important;
+  margin-bottom: 0 !important;
+  flex-shrink: 0 !important;
+}
+#page-grid.mobile-preview-active .sidebar-name    { font-size: 22px !important; margin-bottom: 4px !important; }
+#page-grid.mobile-preview-active .sidebar-tagline { font-size: 13px !important; }
+#page-grid.mobile-preview-active .portfolio-content { padding-bottom: 220px !important; }
+
+/* 3 — Bento grid: 2-column, small-mobile row height and gap */
+#page-grid.mobile-preview-active .bento-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  grid-auto-rows: 140px !important;
+  gap: 10px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+}
+
+/* 4 — All profile tiles: column layout
+   ID-root specificity (1,1,0) beats the base rule's
+   .tile-profile[data-size="2x1"] (0,2,0) even with !important */
+#page-grid.mobile-preview-active .tile-profile {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  padding: 16px 18px !important;
+  gap: 10px !important;
+}
+#page-grid.mobile-preview-active .profile-avatar {
+  width: 52px !important;
+  height: 52px !important;
+  font-size: 18px !important;
+  margin: 0 0 2px 0 !important;
+  flex-shrink: 0 !important;
+}
+#page-grid.mobile-preview-active .profile-info {
+  width: 100% !important;
+  overflow: hidden !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+#page-grid.mobile-preview-active .profile-name    { font-size: 18px !important; }
+#page-grid.mobile-preview-active .profile-tagline { font-size: 12px !important; margin-top: 4px !important; white-space: normal !important; }
+#page-grid.mobile-preview-active .profile-handle  { font-size: 11px !important; }
+
+/* 5 — All tiles: prevent overflow through the canvas boundary */
+#page-grid.mobile-preview-active .tile {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+#page-grid.mobile-preview-active .tile * {
+  max-width: 100% !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  box-sizing: border-box !important;
 }
