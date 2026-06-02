@@ -946,14 +946,13 @@ function openAvatarEditor(e) {
     const reader = new FileReader();
     reader.onload = function (ev) {
       openCropModal(ev.target.result, function (croppedDataUrl) {
+        // Set the value then call save() immediately.
+        // We cannot wait for the user to click Save — the crop modal's
+        // "Apply crop" click bubbles to document and triggers the popover's
+        // outside-click dismiss handler, removing the popover before the
+        // user ever gets the chance to hit Save.
         input.value = croppedDataUrl;
-        // Live-preview sidebar avatar
-        const avatarEl = document.getElementById('sidebarAvatar');
-        if (avatarEl) {
-          const lang = I18N.current();
-          avatarEl.innerHTML = `<img src="${croppedDataUrl}" alt="${lang.name || ''}" />`;
-        }
-        I18N.showToast('Photo cropped — click Save to apply');
+        save(); // writes to localStorage, removes popover, updates sidebar
       });
     };
     reader.readAsDataURL(file);
@@ -1035,7 +1034,8 @@ function openAvatarEditor(e) {
     imgEl.src = '';
   }
 
-  confirmBtn?.addEventListener('click', () => {
+  confirmBtn?.addEventListener('click', (e) => {
+    e.stopPropagation(); // prevent bubbling to document outside-click handlers
     if (!_cropper || !_callback) return;
     // Export at 400×400 JPEG 85 % — compact enough for data.json
     const canvas = _cropper.getCroppedCanvas({ width: 400, height: 400 });

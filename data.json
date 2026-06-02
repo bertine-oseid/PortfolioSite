@@ -1,17 +1,144 @@
 {
   "version": 1,
   "_note": "Portfolio saved state. In Edit Mode click 'Export', then commit this file to GitHub to sync across all devices.",
-
   "lang": null,
   "avatar": null,
-
   "overrides": {
-    "no": {},
+    "no": {
+      "name": "Bertine Oseid",
+      "tagline": "Junior Innholdsprodusent Grafisk Designer og Illustratør Salg- og Entreprenørskap",
+      "handle": "@"
+    },
     "en": {}
   },
-
   "layout": {
-    "desktop": [],
-    "mobile": []
+    "desktop": [
+      {
+        "id": "profile",
+        "type": "profile",
+        "size": "2x1"
+      },
+      {
+        "id": "twitter",
+        "type": "social",
+        "handle": "@alexrivera",
+        "url": "https://x.com/alexrivera",
+        "platform": "twitter",
+        "size": "1x1"
+      },
+      {
+        "id": "github",
+        "type": "social",
+        "handle": "alexrivera",
+        "url": "https://github.com/alexrivera",
+        "platform": "github",
+        "size": "1x1"
+      },
+      {
+        "id": "instagram",
+        "type": "social",
+        "handle": "@alex.rivera",
+        "url": "https://instagram.com/alex.rivera",
+        "platform": "instagram",
+        "size": "1x1"
+      },
+      {
+        "id": "linkedin",
+        "type": "social",
+        "handle": "Alex Rivera",
+        "url": "https://linkedin.com/in/alexrivera",
+        "platform": "linkedin",
+        "size": "1x1"
+      },
+      {
+        "id": "resume",
+        "type": "link",
+        "url": "#",
+        "emoji": "📄",
+        "size": "2x1"
+      },
+      {
+        "id": "quote",
+        "type": "text",
+        "style": "quote",
+        "size": "2x1"
+      },
+      {
+        "id": "blog",
+        "type": "blog-preview",
+        "size": "2x1"
+      },
+      {
+        "id": "email",
+        "type": "link",
+        "url": "mailto:hello@alexrivera.com",
+        "emoji": "✉️",
+        "size": "1x1"
+      }
+    ],
+    "mobile": [
+      {
+        "id": "profile",
+        "type": "profile",
+        "size": "2x1"
+      },
+      {
+        "id": "quote",
+        "type": "text",
+        "style": "quote",
+        "size": "2x1"
+      },
+      {
+        "id": "instagram",
+        "type": "social",
+        "handle": "@alex.rivera",
+        "url": "https://instagram.com/alex.rivera",
+        "platform": "instagram",
+        "size": "1x1"
+      },
+      {
+        "id": "twitter",
+        "type": "social",
+        "handle": "@alexrivera",
+        "url": "https://x.com/alexrivera",
+        "platform": "twitter",
+        "size": "1x1"
+      },
+      {
+        "id": "blog",
+        "type": "blog-preview",
+        "size": "2x1"
+      },
+      {
+        "id": "github",
+        "type": "social",
+        "handle": "alexrivera",
+        "url": "https://github.com/alexrivera",
+        "platform": "github",
+        "size": "1x1"
+      },
+      {
+        "id": "linkedin",
+        "type": "social",
+        "handle": "Alex Rivera",
+        "url": "https://linkedin.com/in/alexrivera",
+        "platform": "linkedin",
+        "size": "1x1"
+      },
+      {
+        "id": "email",
+        "type": "link",
+        "url": "mailto:hello@alexrivera.com",
+        "emoji": "✉️",
+        "size": "1x1"
+      },
+      {
+        "id": "resume",
+        "type": "link",
+        "url": "#",
+        "emoji": "📄",
+        "size": "1x1"
+      }
+    ]
   }
 }
