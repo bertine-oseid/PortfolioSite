@@ -913,9 +913,16 @@ function openAvatarEditor(e) {
   pop.id        = 'avatar-edit-popover';
   pop.className = 'avatar-edit-popover';
   pop.innerHTML = `
-    <p class="aep-label">Avatar image URL</p>
+    <p class="aep-label">Avatar image</p>
     <input class="aep-input" type="url" value="${current}"
            placeholder="https://example.com/photo.jpg" />
+    <div class="aep-upload-row">
+      <label class="aep-upload-btn" title="Import photo from device">
+        📂 Import from device
+        <input type="file" accept="image/*" class="aep-file-input" />
+      </label>
+      <span class="aep-upload-hint">or paste a URL above</span>
+    </div>
     <p class="aep-hint">Leave blank to show initials instead.</p>
     <div class="aep-actions">
       <button class="aep-btn aep-save">Save</button>
@@ -926,8 +933,33 @@ function openAvatarEditor(e) {
   pop.style.left = rect.left + 'px';
   document.body.appendChild(pop);
 
-  const input = pop.querySelector('.aep-input');
+  const input    = pop.querySelector('.aep-input');
+  const fileInput = pop.querySelector('.aep-file-input');
   input.focus(); input.select();
+
+  // When a file is selected, open the crop modal instead of saving raw.
+  // The modal calls back with the cropped base64, which we drop into the
+  // URL input so the existing save() handles it unchanged.
+  fileInput.addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function (ev) {
+      openCropModal(ev.target.result, function (croppedDataUrl) {
+        input.value = croppedDataUrl;
+        // Live-preview sidebar avatar
+        const avatarEl = document.getElementById('sidebarAvatar');
+        if (avatarEl) {
+          const lang = I18N.current();
+          avatarEl.innerHTML = `<img src="${croppedDataUrl}" alt="${lang.name || ''}" />`;
+        }
+        I18N.showToast('Photo cropped — click Save to apply');
+      });
+    };
+    reader.readAsDataURL(file);
+    // Reset so the same file can be re-selected after cancelling
+    this.value = '';
+  });
 
   function save() {
     const url = input.value.trim();
@@ -955,6 +987,72 @@ function openAvatarEditor(e) {
     });
   }, 0);
 }
+
+// ── Image crop modal ──────────────────────────────────────────
+// Global singleton — opened by any image field (avatar, thumbnails, etc.)
+// Usage: openCropModal(dataUrl, (croppedDataUrl) => { ... })
+(function () {
+  let _cropper  = null;
+  let _callback = null;
+
+  const modal    = document.getElementById('cropModal');
+  const imgEl    = document.getElementById('imageToCrop');
+  const confirmBtn = document.getElementById('cropConfirm');
+  const cancelBtn  = document.getElementById('cropCancel');
+  const closeBtn   = document.getElementById('cropModalClose');
+  const zoomInBtn  = document.getElementById('cropZoomIn');
+  const zoomOutBtn = document.getElementById('cropZoomOut');
+
+  if (!modal) return; // guard: modal not in DOM yet
+
+  function open(src, callback) {
+    _callback  = callback;
+    imgEl.src  = src;
+    modal.classList.add('open');
+
+    // Destroy any existing cropper before re-initialising
+    if (_cropper) { _cropper.destroy(); _cropper = null; }
+
+    // Wait one frame so the image has painted before Cropper measures it
+    requestAnimationFrame(() => {
+      _cropper = new Cropper(imgEl, {
+        aspectRatio:   1,       // perfect square — LinkedIn / profile style
+        viewMode:      1,       // crop box cannot exceed canvas
+        dragMode:      'move',  // drag the image, not the crop box
+        background:    false,   // no checkerboard outside the image
+        autoCropArea:  0.9,     // start with 90 % selected
+        responsive:    true,
+        guides:        true,
+        highlight:     false,
+      });
+    });
+  }
+
+  function close() {
+    modal.classList.remove('open');
+    if (_cropper) { _cropper.destroy(); _cropper = null; }
+    _callback = null;
+    imgEl.src = '';
+  }
+
+  confirmBtn?.addEventListener('click', () => {
+    if (!_cropper || !_callback) return;
+    // Export at 400×400 JPEG 85 % — compact enough for data.json
+    const canvas = _cropper.getCroppedCanvas({ width: 400, height: 400 });
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    _callback(dataUrl);
+    close();
+  });
+
+  cancelBtn?.addEventListener('click',  close);
+  closeBtn?.addEventListener('click',   close);
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  zoomInBtn?.addEventListener('click',  () => _cropper?.zoom(0.1));
+  zoomOutBtn?.addEventListener('click', () => _cropper?.zoom(-0.1));
+
+  // Expose globally so any part of the app can open the crop modal
+  window.openCropModal = open;
+})();
 
 // ── Export button ─────────────────────────────────────────────
 document.getElementById('exportDataBtn')?.addEventListener('click', () => {

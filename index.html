@@ -15,15 +15,17 @@
   <meta property="og:description" content="Personlig portfolio, lenker og blogg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="src/styles/main.css" />
+  <!-- Cropper.js — avatar crop modal -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
 </head>
 <body>
   <div id="app">
     <!-- Header -->
     <header class="site-header">
       <nav class="nav">
-        <span class="nav-logo">AR</span>
+        <span class="nav-logo">Bertine Oseid<span class="org-number">Org.nr. 835 948 382</span></span>
         <div class="nav-links">
           <a href="#grid" class="nav-link active" data-page="grid">Hjem</a>
           <a href="#blog" class="nav-link" data-page="blog">Blogg</a>
@@ -223,6 +225,34 @@
     </div>
   </div>
 
+  <!-- Image crop modal — must live before scripts so getElementById finds it at parse time -->
+  <div class="modal-overlay" id="cropModal" role="dialog" aria-modal="true" aria-labelledby="cropModalTitle">
+    <div class="modal-box crop-modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" id="cropModalTitle">Adjust Photo</h3>
+        <button class="modal-close" id="cropModalClose" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="crop-container">
+        <img id="imageToCrop" src="" alt="Crop preview" />
+      </div>
+      <div class="crop-zoom-bar">
+        <button class="crop-zoom-btn" id="cropZoomOut" title="Zoom out">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <span class="crop-zoom-label">Scroll or drag to adjust</span>
+        <button class="crop-zoom-btn" id="cropZoomIn" title="Zoom in">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn modal-btn-cancel" id="cropCancel">Cancel</button>
+        <button class="modal-btn modal-btn-primary" id="cropConfirm">Apply crop</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Data -->
   <script src="src/data/config.js"></script>
   <script src="src/data/blog-posts.js"></script>
@@ -235,6 +265,8 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <!-- Drag-and-drop -->
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <!-- Cropper.js — must load before app.js initialises the crop modal controller -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 
   <!-- Components -->
   <script src="src/components/grid.js"></script>

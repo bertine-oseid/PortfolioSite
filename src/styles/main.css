@@ -31,7 +31,7 @@
                   0 16px 32px rgba(0,0,0,0.05);
 
   --font-sans: 'Poppins', sans-serif;
-  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-serif: 'Poppins', sans-serif;
 
   --grid-col: 160px;
   --grid-gap: 14px;
@@ -94,10 +94,23 @@ body {
 .nav-logo {
   font-family: var(--font-serif);
   font-size: 18px;
-  font-style: italic;
   color: var(--text-primary);
   margin-right: auto;
   cursor: default;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.org-number {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.45;
+  white-space: nowrap;
 }
 
 .nav-links { display: flex; gap: 4px; }
@@ -218,7 +231,6 @@ body {
   justify-content: center;
   font-family: var(--font-serif);
   font-size: 36px;
-  font-style: italic;
   color: #fff;
   margin-bottom: 22px;
   flex-shrink: 0;
@@ -228,7 +240,6 @@ body {
 .sidebar-name {
   font-family: var(--font-serif);
   font-size: 34px;
-  font-style: italic;
   line-height: 1.1;
   color: var(--text-primary);
   margin-bottom: 12px;
@@ -298,7 +309,6 @@ body {
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-serif);
   font-size: 22px;
-  font-style: italic;
   color: white;
   overflow: hidden;
 }
@@ -307,7 +317,6 @@ body {
 .profile-name {
   font-family: var(--font-serif);
   font-size: 22px;
-  font-style: italic;
   line-height: 1.1;
 }
 .profile-handle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
@@ -449,7 +458,6 @@ body {
 .tile-text.quote-style .tile-text-content {
   font-family: var(--font-serif);
   font-size: 18px;
-  font-style: italic;
   color: white;
   line-height: 1.55;
 }
@@ -485,7 +493,6 @@ body {
 .blog-title {
   font-family: var(--font-serif);
   font-size: 42px;
-  font-style: italic;
   line-height: 1.05;
 }
 .blog-subtitle { font-size: 16px; color: var(--text-secondary); margin-top: 8px; }
@@ -520,7 +527,6 @@ body {
 .blog-card-title {
   font-family: var(--font-serif);
   font-size: 22px;
-  font-style: italic;
   line-height: 1.2;
   margin-bottom: 8px;
 }
@@ -552,7 +558,6 @@ article { font-size: 17px; line-height: 1.72; color: var(--text-primary); }
 article h1 {
   font-family: var(--font-serif);
   font-size: 38px;
-  font-style: italic;
   font-weight: 400;
   line-height: 1.1;
   margin: 0 0 12px;
@@ -560,7 +565,6 @@ article h1 {
 article h2 {
   font-family: var(--font-serif);
   font-size: 24px;
-  font-style: italic;
   font-weight: 400;
   margin: 2em 0 0.6em;
   color: var(--text-primary);
@@ -898,6 +902,113 @@ article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
 }
 .aep-save:hover   { background: var(--accent-dark); border-color: var(--accent-dark); }
 .aep-cancel:hover { background: var(--bg-card-hover); }
+
+/* File upload row inside avatar popover */
+.aep-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.aep-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-hover);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.aep-upload-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+/* Hide the native file input — the label acts as the trigger */
+.aep-file-input {
+  display: none;
+}
+.aep-upload-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   IMAGE CROP MODAL
+   ============================================================ */
+.crop-modal-box {
+  width: min(520px, 92vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  padding: 0;
+}
+.crop-modal-box .modal-header {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Cropper.js canvas container */
+.crop-container {
+  flex: 1;
+  background: #111;
+  max-height: 380px;
+  overflow: hidden;
+  position: relative;
+}
+.crop-container img {
+  display: block;
+  max-width: 100%;
+}
+
+/* Zoom control strip */
+.crop-zoom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 10px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+.crop-zoom-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border-hover);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.crop-zoom-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.crop-zoom-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.crop-modal-box .modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+}
 
 .i18n-editable {
   border-radius: 4px;
@@ -2184,4 +2295,142 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
   overflow-wrap: break-word !important;
   white-space: normal !important;
   box-sizing: border-box !important;
+}
+
+
+/* =====================================================================
+   MOBILE PREVIEW — VERTICAL SIDEBAR TOOLBAR
+   When Mobile Preview is active (body.mobile-preview-on), the bottom
+   admin bar lifts off the floor and docks as a slim vertical panel on
+   the left so it never covers the canvas. Transitions back to its
+   normal bottom position the moment preview is toggled off.
+   ===================================================================== */
+
+/* Give the bar a smooth physics transition for position changes */
+.admin-control-bar {
+  transition: opacity 0.2s,
+              bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              left   0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              top    0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              width  0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              border-radius 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Sidebar container ───────────────────────────────────────── */
+body.mobile-preview-on .admin-control-bar {
+  bottom: auto !important;
+  left: 20px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: auto !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  padding: 16px 12px !important;
+  border-top: none !important;
+  border: 1px solid var(--border-hover) !important;
+  border-radius: 20px !important;
+  max-height: 80vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+}
+[data-theme="dark"] body.mobile-preview-on .admin-control-bar {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.32) !important;
+}
+
+/* ── Left spacer — not needed in column layout ───────────────── */
+body.mobile-preview-on .admin-bar-left {
+  display: none !important;
+}
+
+/* ── Creation dock — reflow from horizontal pill to column ───── */
+body.mobile-preview-on .creation-dock {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  border-radius: 14px !important;
+  padding: 10px 8px !important;
+  gap: 2px !important;
+  width: 100% !important;
+}
+
+/* "ADD BLOCK" label stays readable as a column header */
+body.mobile-preview-on .dock-label {
+  text-align: center !important;
+  padding: 0 0 6px 0 !important;
+  white-space: nowrap !important;
+}
+
+/* Dock dividers become horizontal rules */
+body.mobile-preview-on .dock-divider {
+  width: 100% !important;
+  height: 1px !important;
+  margin: 4px 0 !important;
+}
+
+/* Dock buttons: full-width row with icon on left, label on right */
+body.mobile-preview-on .dock-btn {
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  padding: 7px 10px !important;
+  font-size: 12px !important;
+  border-radius: 8px !important;
+  white-space: nowrap !important;
+}
+
+/* ── Right-side action buttons — stack vertically ────────────── */
+body.mobile-preview-on .admin-bar-right {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+/* Action buttons fill the sidebar width */
+body.mobile-preview-on .mobile-preview-btn,
+body.mobile-preview-on .export-data-btn,
+body.mobile-preview-on .add-box-btn,
+body.mobile-preview-on .admin-toggle-btn {
+  width: 100% !important;
+  justify-content: center !important;
+  border-radius: 10px !important;
+  white-space: nowrap !important;
+}
+
+/* Mobile Preview button already active — give it a compact label */
+body.mobile-preview-on .mobile-preview-btn {
+  font-size: 12px !important;
+}
+
+
+/* =====================================================================
+   FIX: RESTORE SHIFT+ENTER LINE BREAKS IN MOBILE PREVIEW
+   The nuclear override above sets white-space: normal on all .tile *,
+   which neutralises <br> tags and pre-line formatting. These rules
+   restore correct white-space behaviour on every text element that
+   legitimately uses line breaks.
+   ===================================================================== */
+
+/* Taglines use white-space: pre-line so Shift+Enter <br> tags render */
+#page-grid.mobile-preview-active .profile-tagline,
+#page-grid.mobile-preview-active .sidebar-tagline,
+#page-grid.mobile-preview-active .tile-text-content,
+#page-grid.mobile-preview-active .link-desc,
+#page-grid.mobile-preview-active .location-desc {
+  white-space: pre-line !important;
+  display: block !important;
+}
+
+/* Ensure <br> tags are never suppressed inside the canvas */
+#page-grid.mobile-preview-active br {
+  display: block !important;
+  content: "" !important;
 }
