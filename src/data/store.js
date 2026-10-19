@@ -1,8 +1,8 @@
 // ============================================================
-//  STORE — data.json ↔ localStorage bridge
+//  STORE — Cloudflare KV / data.json ↔ localStorage bridge
 // ============================================================
 //
-//  TWO JOBS:
+//  THREE JOBS:
 //
 //  1. LOAD  — Store.init()
 //     Fetches /api/content (Cloudflare KV) on every page load, and
@@ -12,20 +12,23 @@
 //     (lang, avatar, text overrides) are also seeded into
 //     localStorage so the rest of the app can read them normally.
 //
-//  2. SAVE  — Store.exportJson()
+//  2. SYNC  — Store.syncLocalFromServer()
+//     Edit Mode works on localStorage. Before editing, this copies
+//     the content saved in KV into localStorage (once per page
+//     load), so an old or empty browser never overwrites newer
+//     content when you click Save. Does nothing while KV is still
+//     empty, so the very first save uses this browser's edits.
+//
+//  3. SAVE  — Store.save()
 //     Builds a complete snapshot of the current portfolio state by
 //     calling window.resolveTiles() for both breakpoints and reading
-//     all meta from localStorage. Downloads the result as data.json.
-//
-//  WORKFLOW:
-//     Edit → click Export → commit data.json to GitHub → deploy.
-//     Any device that opens the site will fetch the new file and
-//     render your latest layout immediately.
+//     all meta from localStorage, then sends it to /api/save, which
+//     stores it in KV. Every visitor sees it on their next load.
 //
 //  FALLBACK:
-//     If data.json is missing, unreachable, empty, or malformed,
-//     init() returns null and the app renders from localStorage +
-//     CONFIG exactly as it always has. Nothing breaks.
+//     If both KV and data.json are missing, unreachable, empty, or
+//     malformed, init() returns null and the app renders from
+//     localStorage + CONFIG exactly as it always has.
 // ============================================================
 
 (function () {
@@ -43,6 +46,11 @@
     avatar:        'portfolio_avatar',
     lang:          'portfolio_lang',
   };
+
+  // ── What init() loaded, and from where ('kv' | 'file') ───────
+  let loaded = null;
+  let source = null;
+  let synced = false;
 
   // ── Seed a localStorage key only when it is currently absent ─
   function seedIfEmpty(key, value) {
@@ -81,9 +89,14 @@
   // json.layout.desktop / json.layout.mobile directly, or null if
   // neither source has anything.
   async function init() {
-    const json = await fetchJson('/api/content') ||
-                 await fetchJson('./data.json?_cb=' + Date.now());
+    let json = await fetchJson('/api/content');
+    source = json ? 'kv' : null;
+    if (!json) {
+      json = await fetchJson('./data.json?_cb=' + Date.now());
+      source = json ? 'file' : null;
+    }
     if (!json) return null;
+    loaded = json;
 
     // Seed meta fields into localStorage for the rest of the app
     seedMeta(json);
@@ -93,25 +106,52 @@
     return json;
   }
 
-  // ── Store.exportJson() ────────────────────────────────────────
-  // Builds a complete, self-contained snapshot of the current
-  // portfolio by calling window.resolveTiles() for both breakpoints.
-  // The exported file can be committed to GitHub and the site will
-  // load from it on every device.
-  function exportJson() {
-    if (typeof window.resolveTiles !== 'function') {
-      console.error('[Store] window.resolveTiles not available yet');
-      return;
-    }
+  // ── Store.syncLocalFromServer() ───────────────────────────────
+  // Overwrites this browser's editing state with the content saved
+  // in KV. Runs at most once per page load; unsaved edits from an
+  // earlier visit in this browser are replaced by the saved version.
+  function syncLocalFromServer() {
+    if (synced || source !== 'kv' || !loaded) return;
+    synced = true;
 
+    const set = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+    const desktop = loaded.layout?.desktop || [];
+    const mobile  = loaded.layout?.mobile  || [];
+
+    // Tiles not defined in CONFIG are custom tiles; CONFIG tiles
+    // missing from both layouts have been hidden.
+    const stockIds = new Set(CONFIG.tiles.map(t => t.id));
+    const custom   = {};
+    const present  = new Set();
+    [...desktop, ...mobile].forEach(t => {
+      present.add(t.id);
+      if (!stockIds.has(t.id) && !custom[t.id]) custom[t.id] = t;
+    });
+    set(LS.customTiles, Object.values(custom));
+    set(LS.hiddenTiles, [...stockIds].filter(id => !present.has(id)));
+
+    set(LS.layoutDesktop, desktop.map(t => t.id));
+    set(LS.layoutMobile,  mobile.map(t => t.id));
+    set(LS.sizesDesktop,  Object.fromEntries(desktop.map(t => [t.id, t.size])));
+    set(LS.sizesMobile,   Object.fromEntries(mobile.map(t => [t.id, t.size])));
+
+    set(LS.overridesNo, loaded.overrides?.no || {});
+    set(LS.overridesEn, loaded.overrides?.en || {});
+    if (loaded.avatar) localStorage.setItem(LS.avatar, loaded.avatar);
+    else               localStorage.removeItem(LS.avatar);
+    if (loaded.lang)   localStorage.setItem(LS.lang, loaded.lang);
+  }
+
+  // ── Build the snapshot that gets saved ────────────────────────
+  function buildSnapshot() {
     function parse(key, fallback) {
       try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
       catch { return fallback; }
     }
 
-    const snapshot = {
+    return {
       version: 1,
-      _note: "Portfolio saved state. In Edit Mode click 'Export', then commit this file to GitHub to sync across all devices.",
+      _note: "Portfolio saved state. Saved from Edit Mode to Cloudflare KV; data.json is only the fallback.",
       lang:   localStorage.getItem(LS.lang)   || null,
       avatar: localStorage.getItem(LS.avatar) || null,
       overrides: {
@@ -125,21 +165,48 @@
         mobile:  window.resolveTiles('mobile'),
       },
     };
+  }
 
-    const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
-    const url  = URL.createObjectURL(blob);
-    const a    = Object.assign(document.createElement('a'), { href: url, download: 'data.json' });
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  // ── Store.save() ──────────────────────────────────────────────
+  // Sends the snapshot to /api/save (protected by Cloudflare
+  // Access). Returns true on success. Shows a toast either way.
+  async function save() {
+    const toast = msg => window.I18N?.showToast && I18N.showToast(msg);
 
-    if (window.I18N?.showToast) {
-      I18N.showToast('data.json downloaded — commit it to GitHub to sync everywhere');
+    if (typeof window.resolveTiles !== 'function') {
+      console.error('[Store] window.resolveTiles not available yet');
+      return false;
     }
+
+    const snapshot = buildSnapshot();
+    let res, body = {};
+    try {
+      res = await fetch('/api/save', {
+        method:      'POST',
+        headers:     { 'Content-Type': 'application/json' },
+        body:        JSON.stringify(snapshot),
+        credentials: 'same-origin',
+      });
+      body = await res.json().catch(() => ({}));
+    } catch {
+      toast('Kunne ikke lagre — er du logget inn? Prøv å laste siden på nytt.');
+      return false;
+    }
+
+    if (!res.ok) {
+      toast('Kunne ikke lagre: ' + (body.error || 'feil ' + res.status));
+      return false;
+    }
+
+    // KV now holds exactly what this browser has
+    loaded = snapshot;
+    source = 'kv';
+    synced = true;
+    toast('Lagret! Alle besøkende ser endringene nå.');
+    return true;
   }
 
   // ── Public API ────────────────────────────────────────────────
-  window.Store = { init, exportJson };
+  window.Store = { init, syncLocalFromServer, save };
 
 })();

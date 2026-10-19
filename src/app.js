@@ -56,6 +56,8 @@ function syncAdminUI() {
 }
 
 function enterAdmin() {
+  // Start editing from the saved (KV) version, not stale local data
+  if (window.Store) Store.syncLocalFromServer();
   I18N.setAdminMode(true);
   syncAdminUI();
   applyLayout(true);
@@ -714,7 +716,7 @@ function getLayoutName() {
 // Returns the fully-resolved, ordered array of tile objects for a
 // given breakpoint ('desktop' or 'mobile'). This is the single
 // source of truth for what gets rendered — used by both applyLayout()
-// at runtime and Store.exportJson() at export time.
+// at runtime and Store.save() at save time.
 function resolveTiles(name) {
   const layout = (CONFIG.layouts && CONFIG.layouts[name]) || null;
 
@@ -766,7 +768,7 @@ function resolveTiles(name) {
   return ordered;
 }
 
-// Expose so store.js can call resolveTiles() at export time
+// Expose so store.js can call resolveTiles() at save time
 window.resolveTiles = resolveTiles;
 
 function applyLayout(force) {
@@ -1054,9 +1056,21 @@ function openAvatarEditor(e) {
   window.openCropModal = open;
 })();
 
-// ── Export button ─────────────────────────────────────────────
-document.getElementById('exportDataBtn')?.addEventListener('click', () => {
-  if (window.Store) Store.exportJson();
+// ── Save button ───────────────────────────────────────────────
+// Sends the current portfolio to Cloudflare KV via /api/save.
+document.getElementById('exportDataBtn')?.addEventListener('click', async e => {
+  const btn   = e.currentTarget;
+  const label = btn.querySelector('.save-label');
+  if (!window.Store || btn.disabled) return;
+
+  btn.disabled = true;
+  if (label) label.textContent = 'Lagrer…';
+  try {
+    await Store.save();
+  } finally {
+    btn.disabled = false;
+    if (label) label.textContent = 'Lagre';
+  }
 });
 
 // ── Mobile Preview toggle ─────────────────────────────────────
@@ -1093,7 +1107,10 @@ document.getElementById('exportDataBtn')?.addEventListener('click', () => {
   let renderedFromJson = false;
 
   if (window.Store) {
-    const jsonData = await Store.init(); // fetch data.json; returns parsed JSON or null
+    const jsonData = await Store.init(); // fetch KV / data.json; returns parsed JSON or null
+
+    // Already in Edit Mode on load: edit from the saved version
+    if (I18N.isAdminMode()) Store.syncLocalFromServer();
 
     if (jsonData) {
       // Seed localStorage meta from data.json (lang, avatar, overrides)
