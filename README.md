@@ -95,7 +95,6 @@ For anything else, add a custom SVG icon to `PLATFORM_ICONS` in `src/components/
 ```
 bento-portfolio/
 ├── index.html              ← entry point
-├── vercel.json             ← Vercel config (do not edit)
 ├── public/                 ← static assets (put your avatar here)
 └── src/
     ├── data/
