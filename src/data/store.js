@@ -5,7 +5,8 @@
 //  TWO JOBS:
 //
 //  1. LOAD  — Store.init()
-//     Fetches data.json on every page load. If the file contains
+//     Fetches /api/content (Cloudflare KV) on every page load, and
+//     falls back to data.json if KV is empty. If the result contains
 //     a non-empty tile array for the current breakpoint, the app
 //     renders from it directly (the "JSON-first" path). Meta fields
 //     (lang, avatar, text overrides) are also seeded into
@@ -61,20 +62,28 @@
     if (ov.en && Object.keys(ov.en).length) seedIfEmpty(LS.overridesEn, ov.en);
   }
 
-  // ── Store.init() ──────────────────────────────────────────────
-  // Fetches data.json. Seeds localStorage meta from it.
-  // Returns the parsed JSON object so the caller can use
-  // json.layout.desktop / json.layout.mobile directly, or null if
-  // the file is empty / unreachable.
-  async function init() {
-    let json;
+  // ── Fetch a JSON url, or null on any failure ─────────────────
+  async function fetchJson(url) {
     try {
-      const res = await fetch('./data.json?_cb=' + Date.now());
+      const res = await fetch(url, { cache: 'no-store' });
       if (!res.ok) return null;
-      json = await res.json();
+      return await res.json();
     } catch {
       return null; // missing, network error, or malformed JSON
     }
+  }
+
+  // ── Store.init() ──────────────────────────────────────────────
+  // Fetches the saved content from KV (/api/content). If KV is
+  // empty or unreachable, falls back to data.json.
+  // Seeds localStorage meta from the result.
+  // Returns the parsed JSON object so the caller can use
+  // json.layout.desktop / json.layout.mobile directly, or null if
+  // neither source has anything.
+  async function init() {
+    const json = await fetchJson('/api/content') ||
+                 await fetchJson('./data.json?_cb=' + Date.now());
+    if (!json) return null;
 
     // Seed meta fields into localStorage for the rest of the app
     seedMeta(json);
