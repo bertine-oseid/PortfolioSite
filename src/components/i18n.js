@@ -10,7 +10,8 @@
 //    I18N.postsForLang(lang)    — blog posts for a language
 //    I18N.currentPosts()        — blog posts for active lang
 //    I18N.saveEdit(field, val)  — save admin edit, trigger sync dialog
-//    I18N.isAdminMode()         — true when ?admin=1
+//    I18N.isAdminPage()         — true on /admin (protected by Cloudflare Access)
+//    I18N.isAdminMode()         — true when Edit Mode is on (only on /admin)
 // ============================================================
 
 (function () {
@@ -89,9 +90,12 @@
   }
 
   // ── Admin mode ────────────────────────────────────────────
+  function isAdminPage() {
+    return location.pathname.replace(/\/+$/, '') === '/admin';
+  }
+
   function isAdminMode() {
-    return localStorage.getItem('portfolio_admin') === '1' ||
-           new URLSearchParams(location.search).get('admin') === '1';
+    return isAdminPage() && localStorage.getItem('portfolio_admin') === '1';
   }
 
   function setAdminMode(enabled) {
@@ -244,7 +248,7 @@
         const newVal = el.innerText.trim();
         if (newVal !== original.trim()) {
           saveEdit(field, newVal);
-          showToast('Saved (' + (_lang === 'no' ? 'NO' : 'EN') + ')');
+          showToast('Endret (' + (_lang === 'no' ? 'NO' : 'EN') + ') – husk å trykke Lagre');
         }
       });
 
@@ -268,6 +272,9 @@
     updateLangToggle();
     updateStaticStrings();
 
+    // Edit buttons are only shown on /admin
+    document.body.classList.toggle('admin-page', isAdminPage());
+
     if (isAdminMode()) {
       document.body.classList.add('admin-mode');
     }
@@ -282,6 +289,7 @@
     currentPosts,
     postsForLang,
     localizedTile,
+    isAdminPage,
     isAdminMode,
     setAdminMode,
     makeEditable,

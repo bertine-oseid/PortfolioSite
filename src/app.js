@@ -27,21 +27,6 @@ document.getElementById('langToggle').addEventListener('click', e => {
   }
 });
 
-// ── Password protection ───────────────────────────────────────
-const ADMIN_PASSWORD = 'TineMelk#';   // ← change this to your own password
-const AUTH_SESSION_KEY = 'portfolio_auth';
-
-// Clear any stale auth from a previous tab/session on every fresh page load
-sessionStorage.removeItem(AUTH_SESSION_KEY);
-
-function isAuthenticated() {
-  return sessionStorage.getItem(AUTH_SESSION_KEY) === '1';
-}
-
-function authenticate() {
-  sessionStorage.setItem(AUTH_SESSION_KEY, '1');
-}
-
 // ── Admin mode helpers ────────────────────────────────────────
 function syncAdminUI() {
   const on = I18N.isAdminMode();
@@ -56,6 +41,8 @@ function syncAdminUI() {
 }
 
 function enterAdmin() {
+  // Start editing from the saved (KV) version, not stale local data
+  if (window.Store) Store.syncLocalFromServer();
   I18N.setAdminMode(true);
   syncAdminUI();
   applyLayout(true);
@@ -79,54 +66,15 @@ function exitAdmin() {
   }
 }
 
-// ── Password modal ────────────────────────────────────────────
-(function () {
-  const modal  = document.getElementById('passwordModal');
-  const input  = document.getElementById('pwInput');
-  const error  = document.getElementById('pwError');
-  const submit = document.getElementById('pwSubmit');
-  const cancel = document.getElementById('pwCancel');
-
-  function open() {
-    input.value = '';
-    error.textContent = '';
-    modal.classList.add('open');
-    setTimeout(() => input.focus(), 80);
-  }
-
-  function close() { modal.classList.remove('open'); }
-
-  function attempt() {
-    if (input.value === ADMIN_PASSWORD) {
-      authenticate();
-      close();
-      enterAdmin();
-    } else {
-      error.textContent = 'Incorrect password — try again.';
-      input.select();
-    }
-  }
-
-  submit.addEventListener('click', attempt);
-  cancel.addEventListener('click', close);
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter')  attempt();
-    if (e.key === 'Escape') close();
-  });
-  modal.addEventListener('click', e => { if (e.target === modal) close(); });
-
-  // Expose open function so the toggle button can call it
-  window._openPasswordModal = open;
-})();
-
 // ── Shared toggle logic (used by both nav button and Done button) ─
+// Edit Mode only exists on /admin, which Cloudflare Access protects.
 function handleAdminToggle() {
   if (I18N.isAdminMode()) {
     exitAdmin();
-  } else if (isAuthenticated()) {
+  } else if (I18N.isAdminPage()) {
     enterAdmin();
   } else {
-    window._openPasswordModal();
+    location.href = '/admin';
   }
 }
 
@@ -714,7 +662,7 @@ function getLayoutName() {
 // Returns the fully-resolved, ordered array of tile objects for a
 // given breakpoint ('desktop' or 'mobile'). This is the single
 // source of truth for what gets rendered — used by both applyLayout()
-// at runtime and Store.exportJson() at export time.
+// at runtime and Store.save() at save time.
 function resolveTiles(name) {
   const layout = (CONFIG.layouts && CONFIG.layouts[name]) || null;
 
@@ -766,7 +714,7 @@ function resolveTiles(name) {
   return ordered;
 }
 
-// Expose so store.js can call resolveTiles() at export time
+// Expose so store.js can call resolveTiles() at save time
 window.resolveTiles = resolveTiles;
 
 function applyLayout(force) {
@@ -1054,9 +1002,21 @@ function openAvatarEditor(e) {
   window.openCropModal = open;
 })();
 
-// ── Export button ─────────────────────────────────────────────
-document.getElementById('exportDataBtn')?.addEventListener('click', () => {
-  if (window.Store) Store.exportJson();
+// ── Save button ───────────────────────────────────────────────
+// Sends the current portfolio to Cloudflare KV via /api/save.
+document.getElementById('exportDataBtn')?.addEventListener('click', async e => {
+  const btn   = e.currentTarget;
+  const label = btn.querySelector('.save-label');
+  if (!window.Store || btn.disabled) return;
+
+  btn.disabled = true;
+  if (label) label.textContent = 'Lagrer…';
+  try {
+    await Store.save();
+  } finally {
+    btn.disabled = false;
+    if (label) label.textContent = 'Lagre';
+  }
 });
 
 // ── Mobile Preview toggle ─────────────────────────────────────
@@ -1093,7 +1053,10 @@ document.getElementById('exportDataBtn')?.addEventListener('click', () => {
   let renderedFromJson = false;
 
   if (window.Store) {
-    const jsonData = await Store.init(); // fetch data.json; returns parsed JSON or null
+    const jsonData = await Store.init(); // fetch KV / data.json; returns parsed JSON or null
+
+    // Already in Edit Mode on load: edit from the saved version
+    if (I18N.isAdminMode()) Store.syncLocalFromServer();
 
     if (jsonData) {
       // Seed localStorage meta from data.json (lang, avatar, overrides)
@@ -1117,6 +1080,9 @@ document.getElementById('exportDataBtn')?.addEventListener('click', () => {
     updateProfileSidebar();
     applyLayout();
   }
+
+  // /admin always opens straight into Edit Mode
+  if (I18N.isAdminPage()) enterAdmin();
 
   handleInitialHash();
 })();

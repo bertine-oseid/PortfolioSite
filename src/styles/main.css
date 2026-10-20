@@ -1146,6 +1146,10 @@ article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
 /* ============================================================
    ADMIN TOGGLE BUTTON (fixed corner)
    ============================================================ */
+/* Edit buttons are only shown on /admin */
+body:not(.admin-page) .nav-edit-toggle,
+body:not(.admin-page) .admin-toggle-btn { display: none; }
+
 .admin-toggle-btn {
   position: fixed;
   bottom: 28px;
