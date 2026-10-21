@@ -223,6 +223,9 @@ function buildGrid(orderedTiles) {
     injectAdminControls(grid);
   }
 
+  // Preview videos: play on hover (desktop) or when visible (mobile)
+  wireVideoTiles(grid);
+
   // Initialise (or re-initialise) SortableJS
   if (typeof window.initSortable === 'function') window.initSortable();
 }
@@ -392,22 +395,23 @@ function getEmbedUrl(url) {
   return null;
 }
 
+// Relative paths like "media/clip.mp4" must resolve from the site
+// root, so they work on both / and /admin
+function videoSrc(src) {
+  if (!src) return '';
+  return /^([a-z]+:|\/)/i.test(src) ? src : '/' + src;
+}
+
 function renderVideo(tile) {
   const embedUrl = getEmbedUrl(tile.src || tile.url || '');
-  const hasLink  = !!(tile.url && tile.url !== '#');
   const label    = tile.label || '';
-  const linkBtn  = hasLink
-    ? `<a class="video-watch-btn" href="${tile.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="Watch full video"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Watch full</a>`
-    : '';
-
-  const hasThumb  = !!tile.thumbnail;
-  const thumbAttr = hasThumb && !embedUrl
-    ? ` style="background-image:url('${tile.thumbnail}');background-size:cover;background-position:center;"`
-    : '';
-
-  const tileId = tile.id || '';
+  const tileId   = tile.id || '';
+  const watchTxt = I18N.activeLang() === 'no' ? 'Se hele' : 'Watch full';
+  const watchBtn = url =>
+    `<a class="video-watch-btn" href="${url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="${watchTxt}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>${watchTxt}</a>`;
 
   if (embedUrl) {
+    const linkBtn = tile.url && tile.url !== '#' ? watchBtn(tile.url) : '';
     return `
       <div class="tile tile-video" data-size="${tile.size}" data-tile-id="${tileId}" data-embed="true">
         <div class="video-embed-wrap">
@@ -417,35 +421,76 @@ function renderVideo(tile) {
       </div>`;
   }
 
-  const src  = tile.src || '';
-  const ext  = src.split('.').pop() || 'mp4';
+  // "Se hele" only links somewhere other than the preview file itself
+  const hasLink   = !!(tile.url && tile.url !== '#' && tile.url !== tile.src);
+  const linkBtn   = hasLink ? watchBtn(tile.url) : '';
+  const hasThumb  = !!tile.thumbnail;
+  const thumbAttr = hasThumb
+    ? ` style="background-image:url('${tile.thumbnail}');background-size:cover;background-position:center;"`
+    : '';
   const poster = (tile.poster || tile.thumbnail) ? `poster="${tile.poster || tile.thumbnail}"` : '';
-  const id   = 'vid_' + Math.random().toString(36).slice(2, 8);
   return `
-    <div class="tile tile-video${hasThumb ? ' has-thumbnail' : ''}" data-size="${tile.size}" data-tile-id="${tileId}" data-embed="false"${thumbAttr} onclick="toggleVideo('${id}')">
-      <video id="${id}" class="video-el" ${poster} muted loop playsinline preload="metadata"><source src="${src}" type="video/${ext}"></video>
-      <div class="video-play-overlay" id="ov_${id}">
-        <div class="video-play-btn" aria-label="Play video"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg></div>
+    <div class="tile tile-video${hasThumb ? ' has-thumbnail' : ''}" data-size="${tile.size}" data-tile-id="${tileId}" data-embed="false"${thumbAttr}>
+      <video class="video-el" ${poster} muted loop playsinline preload="metadata" src="${videoSrc(tile.src)}"></video>
+      <div class="video-play-overlay">
+        <div class="video-play-btn" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg></div>
       </div>
       <div class="video-overlay-bar"><span class="video-label" data-ce-tile-id="${tileId}" data-ce-field="label">${label}</span>${linkBtn}</div>
     </div>`;
 }
 
-function toggleVideo(id) {
-  const vid = document.getElementById(id);
-  const ov  = document.getElementById('ov_' + id);
-  if (!vid) return;
-  if (vid.paused) {
-    vid.play();
-    ov.style.opacity = '0';
-    ov.style.pointerEvents = 'none';
-  } else {
-    vid.pause();
-    ov.style.opacity = '1';
-    ov.style.pointerEvents = 'auto';
-  }
+// ── Preview playback ───────────────────────────────────────────
+// Desktop (real mouse): play while hovered, rewind on leave.
+// Touch devices: play while at least half the tile is on screen.
+// Reduced motion: never autoplay. Click/tap always toggles, which
+// also covers browsers that refuse autoplay (e.g. iOS Low Power).
+let _videoObserver = null;
+
+function playVideo(vid) {
+  const p = vid.play();
+  if (p && p.catch) p.catch(() => {}); // refused — play icon stays, tap starts it
 }
-window.toggleVideo = toggleVideo;
+
+function wireVideoTiles(grid) {
+  if (_videoObserver) { _videoObserver.disconnect(); _videoObserver = null; }
+
+  const tiles = grid.querySelectorAll('.tile-video[data-embed="false"]');
+  if (!tiles.length) return;
+
+  const auto  = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hover = matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  if (auto && !hover && 'IntersectionObserver' in window) {
+    _videoObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const vid = entry.target.querySelector('video');
+        if (!vid) return;
+        if (entry.isIntersecting) playVideo(vid);
+        else vid.pause();
+      });
+    }, { threshold: 0.5 });
+  }
+
+  tiles.forEach(tile => {
+    const vid = tile.querySelector('video');
+    if (!vid) return;
+
+    vid.addEventListener('play',  () => tile.classList.add('is-playing'));
+    vid.addEventListener('pause', () => tile.classList.remove('is-playing'));
+
+    if (auto && hover) {
+      tile.addEventListener('mouseenter', () => playVideo(vid));
+      tile.addEventListener('mouseleave', () => { vid.pause(); vid.currentTime = 0; });
+    }
+    if (_videoObserver) _videoObserver.observe(tile);
+
+    tile.addEventListener('click', e => {
+      if (e.target.closest('a, .admin-controls, .ac-btn, [data-ce-field]')) return;
+      if (vid.paused) playVideo(vid);
+      else vid.pause();
+    });
+  });
+}
 
 // ── Divider tile ──────────────────────────────────────────────
 function renderDivider(tile) {

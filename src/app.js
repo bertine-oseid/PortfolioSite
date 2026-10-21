@@ -735,7 +735,10 @@ function applyLayout(force) {
   const name = getLayoutName();
   if (name === activeLayout && !force) return;
   activeLayout = name;
-  buildGrid(resolveTiles(name));
+  // Visitors always see the saved version (also after a language
+  // switch or breakpoint change); Edit Mode works on local data.
+  const saved = !I18N.isAdminMode() && window.Store ? Store.savedLayout(name) : null;
+  buildGrid(saved || resolveTiles(name));
 }
 
 // Re-render instantly on breakpoint crossing, debounce for mid-range resizes

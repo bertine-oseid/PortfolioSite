@@ -712,6 +712,9 @@ article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
   background: rgba(255,255,255,0.28);
   transform: scale(1.06);
 }
+/* Clicks go to the tile; hide the play icon while the preview runs */
+.video-play-overlay { pointer-events: none; }
+.tile-video.is-playing .video-play-overlay { opacity: 0; }
 
 /* YouTube / Vimeo iframe */
 .video-embed-wrap {
