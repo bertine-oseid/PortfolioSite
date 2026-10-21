@@ -223,7 +223,7 @@
   function makeEditable(el, field) {
     if (!isAdminMode()) return;
     el.classList.add('i18n-editable');
-    el.title = 'Click to edit (' + (_lang === 'no' ? 'NO' : 'EN') + ')';
+    el.title = 'Klikk for å endre (' + (_lang === 'no' ? 'NO' : 'EN') + ')';
     el.addEventListener('click', function (e) {
       if (el.isContentEditable) return; // already editing
       e.stopPropagation();

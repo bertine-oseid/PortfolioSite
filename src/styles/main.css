@@ -1970,6 +1970,26 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
 
 .dock-btn svg { flex-shrink: 0; }
 
+/* Toolbar button labels never wrap (e.g. "Legg til boks") */
+.add-box-btn,
+.export-data-btn,
+.mobile-preview-btn,
+.admin-toggle-btn { white-space: nowrap; }
+
+/* Mid widths (tablet / small laptop): no centring spacer, a tighter
+   dock, and the action buttons wrap below it instead of overflowing */
+@media (min-width: 769px) and (max-width: 1279px) {
+  .admin-control-bar {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 12px;
+    padding: 10px 16px;
+  }
+  .admin-bar-left { display: none; }
+  .admin-bar-right { flex: 0 1 auto; }
+  .dock-btn { padding: 6px 6px; min-width: 40px; }
+}
+
 .dock-btn:hover {
   background: var(--accent-light);
   color: var(--accent);
@@ -2136,7 +2156,16 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
     justify-content: space-around;
     flex-wrap: nowrap;
     gap: 0;
+    /* Too many blocks for a phone: swipe sideways instead of clipping */
+    overflow-x: auto;
+    scrollbar-width: none;
   }
+  .creation-dock::-webkit-scrollbar { display: none; }
+  /* Centring with justify-content would push the first buttons out of
+     reach when it overflows; auto margins centre only when there's room */
+  .creation-dock { justify-content: flex-start; }
+  .creation-dock > :first-child { margin-left: auto; }
+  .creation-dock > :last-child  { margin-right: auto; }
 
   /* Hide text label + divider — icons only on mobile */
   .dock-label,
@@ -2165,6 +2194,9 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
     font-size: 12px;
     padding: 8px 14px;
   }
+
+  /* Already looking at the phone layout — the preview toggle has no use */
+  .admin-mode .mobile-preview-btn { display: none; }
 }
 
 /* ============================================================

@@ -103,7 +103,7 @@ function triggerEditCursorBubble() {
 
   const bubble = document.createElement('div');
   bubble.className = 'edit-cursor-bubble';
-  bubble.textContent = 'Edit Mode ✍️';
+  bubble.textContent = 'Redigeringsmodus ✍️';
   document.body.appendChild(bubble);
 
   const updatePosition = e => {
@@ -471,11 +471,11 @@ window.removeCustomTile = removeCustomTile;
     if (tile) prefillFields(tile);
     // The dock passes { type } only — that's a new box, not an edit
     if (tile?.id) {
-      modalTitle.textContent    = 'Edit Box';
-      submitBtn.textContent     = 'Save Changes';
+      modalTitle.textContent    = 'Rediger boks';
+      submitBtn.textContent     = 'Lagre endringer';
     } else {
-      modalTitle.textContent    = 'Add New Box';
-      submitBtn.textContent     = 'Add Box';
+      modalTitle.textContent    = 'Legg til ny boks';
+      submitBtn.textContent     = 'Legg til boks';
     }
 
     modal.classList.add('open');
@@ -487,8 +487,8 @@ window.removeCustomTile = removeCustomTile;
     editingTileId = null;
     // Reset labels after transition
     setTimeout(() => {
-      modalTitle.textContent = 'Add New Box';
-      submitBtn.textContent  = 'Add Box';
+      modalTitle.textContent = 'Legg til ny boks';
+      submitBtn.textContent  = 'Legg til boks';
     }, 200);
   }
 
@@ -576,7 +576,7 @@ window.removeCustomTile = removeCustomTile;
       });
     }
 
-    if (!valid) { I18N.showToast('Please fill in the required fields.'); return; }
+    if (!valid) { I18N.showToast('Fyll inn de påkrevde feltene.'); return; }
 
     const isEditing = !!editingTileId;
     if (isEditing) {
@@ -587,7 +587,7 @@ window.removeCustomTile = removeCustomTile;
 
     close();
     applyLayout(true);
-    I18N.showToast(isEditing ? 'Box updated!' : 'New box added!');
+    I18N.showToast(isEditing ? 'Boksen er oppdatert!' : 'Ny boks lagt til!');
   }
 
   typeSelect.addEventListener('change', () => {
@@ -1063,16 +1063,26 @@ document.getElementById('exportDataBtn')?.addEventListener('click', async e => {
   const workspace = document.getElementById('page-grid');
   if (!btn || !workspace) return;
 
+  // The label says what a click will switch TO
+  function setLabel(active) {
+    btn.textContent = active ? '🖥️ PC-visning' : '📱 Mobilvisning';
+    btn.setAttribute('aria-label', active
+      ? 'Vis siden slik den ser ut på PC'
+      : 'Vis siden slik den ser ut på mobil');
+  }
+
   function resetPreview() {
     workspace.classList.remove('mobile-preview-active');
     document.body.classList.remove('mobile-preview-on');
     btn.classList.remove('is-active');
+    setLabel(false);
   }
 
   btn.addEventListener('click', () => {
     const active = workspace.classList.toggle('mobile-preview-active');
     document.body.classList.toggle('mobile-preview-on', active);
     btn.classList.toggle('is-active', active);
+    setLabel(active);
     // No re-render — CSS handles the reflow
   });
 

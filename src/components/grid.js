@@ -126,7 +126,7 @@ function makeCustomEditable(el) {
   if (!tileId || !field) return;
 
   el.classList.add('i18n-editable');
-  el.title = 'Click to edit';
+  el.title = 'Klikk for å endre';
 
   el.addEventListener('click', function handler(e) {
     if (el.isContentEditable) return; // already in edit mode
@@ -157,7 +157,7 @@ function makeCustomEditable(el) {
         if (typeof window.updateCustomTile === 'function') {
           window.updateCustomTile(tileId, { [field]: newVal });
         }
-        I18N.showToast('Saved');
+        I18N.showToast('Endret – husk å trykke Lagre');
       }
     });
 
@@ -232,10 +232,10 @@ function buildGrid(orderedTiles) {
 
 // ── Admin controls (bottom-left strip, appears on tile hover) ─
 const SIZE_OPTIONS = [
-  { key: '1x1', label: 'Small', hint: '1×1' },
-  { key: '2x1', label: 'Wide',  hint: '2×1' },
-  { key: '1x2', label: 'Tall',  hint: '1×2' },
-  { key: '2x2', label: 'Big',   hint: '2×2' },
+  { key: '1x1', label: 'Liten', hint: '1×1' },
+  { key: '2x1', label: 'Bred',  hint: '2×1' },
+  { key: '1x2', label: 'Høy',   hint: '1×2' },
+  { key: '2x2', label: 'Stor',  hint: '2×2' },
 ];
 
 const IC_RESIZE = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>`;
@@ -318,7 +318,7 @@ function injectAdminControls(grid) {
     // ── Resize button (opens portal) ──────────────────────────
     const resizeBtn = document.createElement('button');
     resizeBtn.className = 'ac-btn ac-resize-btn';
-    resizeBtn.title = 'Resize';
+    resizeBtn.title = 'Endre størrelse';
     resizeBtn.innerHTML = IC_RESIZE;
     resizeBtn.addEventListener('click', e => {
       e.stopPropagation();
@@ -329,7 +329,7 @@ function injectAdminControls(grid) {
     // ── Edit button (all tiles) ───────────────────────────────
     const editBtn = document.createElement('button');
     editBtn.className = 'ac-btn ac-edit-btn';
-    editBtn.title = 'Edit box';
+    editBtn.title = 'Rediger boks';
     editBtn.innerHTML = IC_EDIT;
     editBtn.addEventListener('click', e => {
       e.stopPropagation();
@@ -342,7 +342,7 @@ function injectAdminControls(grid) {
         if (firstEditable) {
           firstEditable.click();
         } else {
-          I18N.showToast('Click any text on this tile to edit it');
+          I18N.showToast('Klikk på en tekst i boksen for å endre den');
         }
       }
     });
@@ -351,7 +351,7 @@ function injectAdminControls(grid) {
     // ── Delete button (all tiles) ────────────────────────────
     const delBtn = document.createElement('button');
     delBtn.className = 'ac-btn ac-delete-btn';
-    delBtn.title = isCustom ? 'Delete box' : 'Hide box';
+    delBtn.title = isCustom ? 'Slett boks' : 'Skjul boks';
     delBtn.innerHTML = IC_DELETE;
     delBtn.addEventListener('click', e => {
       e.stopPropagation();
