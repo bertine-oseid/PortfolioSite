@@ -324,6 +324,13 @@ window.removeCustomTile = removeCustomTile;
         <p class="form-hint">Shown before the video loads or as a box background image.</p>
       </div>`,
 
+    'blog-preview': `
+      <div class="form-group">
+        <label class="form-label" for="abLabel">Overskrift <span class="form-optional">(valgfri)</span></label>
+        <input type="text" class="form-input" id="abLabel" placeholder="Siste innlegg" />
+        <p class="form-hint">Flisen viser de 3 nyeste blogginnleggene. Et klikk på flisen åpner bloggen.</p>
+      </div>`,
+
     divider: `
       <div class="form-group">
         <label class="form-label" for="abDivStyle">Style</label>
@@ -420,6 +427,8 @@ window.removeCustomTile = removeCustomTile;
       document.getElementById('abLabel').value  = tile.label     || '';
       document.getElementById('abSrc').value    = tile.src       || '';
       document.getElementById('abThumb').value  = tile.thumbnail || '';
+    } else if (tile.type === 'blog-preview') {
+      document.getElementById('abLabel').value = tile.label || '';
     } else if (tile.type === 'divider') {
       document.getElementById('abDivStyle').value = tile.style   || 'line';
       document.getElementById('abContent').value  = tile.content || '';
@@ -451,8 +460,9 @@ window.removeCustomTile = removeCustomTile;
     renderFields(type);
     setSize(tile?.size || '1x1');
 
-    if (tile) {
-      prefillFields(tile);
+    if (tile) prefillFields(tile);
+    // The dock passes { type } only — that's a new box, not an edit
+    if (tile?.id) {
       modalTitle.textContent    = 'Edit Box';
       submitBtn.textContent     = 'Save Changes';
     } else {
@@ -499,6 +509,10 @@ window.removeCustomTile = removeCustomTile;
         description: document.getElementById('abDesc')?.value.trim()  || '',
         emoji:       document.getElementById('abEmoji')?.value.trim() || '🔗',
         thumbnail:   document.getElementById('abThumb')?.value.trim() || '',
+      });
+    } else if (type === 'blog-preview') {
+      data = Object.assign(data, {
+        label: document.getElementById('abLabel')?.value.trim() || '',
       });
     } else if (type === 'divider') {
       data = Object.assign(data, {

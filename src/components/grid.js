@@ -98,7 +98,13 @@ function renderText(tile) {
 function renderBlogPreview(tile) {
   const t     = localTile(tile);
   const posts = I18N.currentPosts().slice(0, 3);
-  const label = t.label || '';
+  // Custom blog tiles keep their own label; the stock "blog" tile uses i18n
+  const label = tile.custom
+    ? (tile.label || (I18N.activeLang() === 'no' ? 'Siste innlegg' : 'Latest writing'))
+    : (t.label || '');
+  const labelAttr = tile.custom
+    ? `data-ce-tile-id="${tile.id}" data-ce-field="label"`
+    : `data-i18n-field="tiles.blog.label"`;
   const postsHtml = posts.map(p => `
     <div class="blog-tile-post" onclick="navigateToPost('${p.id}')">
       <div class="blog-tile-post-title">${p.title}</div>
@@ -106,7 +112,7 @@ function renderBlogPreview(tile) {
     </div>`).join('');
   return `
     <div class="tile tile-blog-preview clickable" data-size="${tile.size}" data-tile-id="${tile.id}" onclick="navigateTo('blog')">
-      <div class="blog-tile-label" data-i18n-field="tiles.blog.label">${label}</div>
+      <div class="blog-tile-label" ${labelAttr}>${label}</div>
       <div class="blog-tile-posts">${postsHtml}</div>
     </div>`;
 }
@@ -143,7 +149,10 @@ function makeCustomEditable(el) {
     el.addEventListener('blur', function save() {
       el.removeEventListener('blur', save);
       el.contentEditable = 'false';
-      const newVal = el.innerText.trim();
+      // innerText follows CSS text-transform (e.g. uppercase labels),
+      // so read the raw text when the element is transformed
+      const raw    = getComputedStyle(el).textTransform === 'none' ? el.innerText : el.textContent;
+      const newVal = raw.trim();
       if (newVal !== original.trim()) {
         if (typeof window.updateCustomTile === 'function') {
           window.updateCustomTile(tileId, { [field]: newVal });

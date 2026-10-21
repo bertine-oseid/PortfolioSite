@@ -245,7 +245,10 @@
       el.addEventListener('blur', function save() {
         el.removeEventListener('blur', save);
         el.contentEditable = 'false';
-        const newVal = el.innerText.trim();
+        // innerText follows CSS text-transform (e.g. uppercase labels),
+        // so read the raw text when the element is transformed
+        const raw    = getComputedStyle(el).textTransform === 'none' ? el.innerText : el.textContent;
+        const newVal = raw.trim();
         if (newVal !== original.trim()) {
           saveEdit(field, newVal);
           showToast('Endret (' + (_lang === 'no' ? 'NO' : 'EN') + ') – husk å trykke Lagre');
