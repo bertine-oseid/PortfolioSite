@@ -1104,7 +1104,9 @@ document.getElementById('exportDataBtn')?.addEventListener('click', async e => {
 
   function showWarning(color) {
     const { light, dark } = Accent.check(color);
-    const tail = ' Tekst i aksentfargen kan være vanskelig å lese – anbefalt er minst 4,5:1.';
+    // Small text gets an automatic darker/lighter variant (4,5:1);
+    // this warns about the colour itself on buttons and large areas.
+    const tail = ' Knapper og flater i aksentfargen kan være vanskelige å se – anbefalt er minst 3:1.';
     let msg = '';
     if (!light.ok && !dark.ok) {
       msg = `Lav kontrast i både lys og mørk modus (lys ${fmt(light.ratio)}, mørk ${fmt(dark.ratio)}).` + tail;

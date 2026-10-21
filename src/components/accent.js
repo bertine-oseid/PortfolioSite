@@ -7,8 +7,10 @@
 //    Visitors  : the saved colour (KV / data.json) → default
 //
 //  Also picks a readable text colour for accent backgrounds
-//  (--on-accent) and checks WCAG contrast against the page
-//  backgrounds, so the picker can warn about hard-to-read text.
+//  (--on-accent), makes a small-text variant of the accent per
+//  mode (--accent-text-light / --accent-text-dark) that reaches
+//  4.5:1, and checks the accent itself against 3:1 (buttons,
+//  large areas) so the picker can warn when it's hard to see.
 // ============================================================
 
 (function () {
@@ -17,12 +19,17 @@
   const LS_KEY  = 'portfolio_accent';
 
   // Page and card backgrounds — mirror :root and [data-theme="dark"]
-  // in main.css. Text in the accent colour sits on both.
+  // in main.css. The accent sits on both.
   const BACKGROUNDS = {
     light: ['#f5f6f8', '#ffffff'],
     dark:  ['#111110', '#1c1c1b'],
   };
-  const MIN_CONTRAST = 4.5; // WCAG AA, normal text
+  // --accent-light tint per mode (mirrors main.css): small accent
+  // text such as blog tags sits on it
+  const TINT = { light: ['#ffffff', 0.08], dark: ['#111110', 0.12] };
+
+  const MIN_CONTRAST  = 3;   // WCAG AA, large text and UI components
+  const TEXT_CONTRAST = 4.5; // WCAG AA, normal text
 
   // "#abc", "abc", "#aabbcc" or "aabbcc" → "#aabbcc"; anything else → null
   function normalize(value) {
@@ -43,6 +50,15 @@
     return 0.2126 * lin(n >> 16) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
   }
 
+  const toRgb = hex => { const n = parseInt(hex.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
+  const toHex = rgb => '#' + rgb.map(c => Math.round(c).toString(16).padStart(2, '0')).join('');
+
+  // Same as CSS color-mix(in srgb, a (1-t), b t)
+  function mix(a, b, t) {
+    const x = toRgb(a), y = toRgb(b);
+    return toHex(x.map((c, i) => c + (y[i] - c) * t));
+  }
+
   function contrast(a, b) {
     const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
     return (hi + 0.05) / (lo + 0.05);
@@ -53,7 +69,21 @@
     return contrast(hex, '#ffffff') >= contrast(hex, '#1a1a1a') ? '#ffffff' : '#1a1a1a';
   }
 
-  // Lowest contrast per mode, and whether it passes
+  // The accent, darkened (light mode) or lightened (dark mode) just
+  // enough to reach 4.5:1 as small text on that mode's backgrounds.
+  // Unchanged when it already passes.
+  function textVariant(hex, mode) {
+    const [tintBase, amount] = TINT[mode];
+    const bgs = [...BACKGROUNDS[mode], mix(tintBase, hex, amount)];
+    const toward = mode === 'light' ? '#000000' : '#ffffff';
+    for (let t = 0; t <= 1; t += 0.02) {
+      const candidate = mix(hex, toward, t);
+      if (Math.min(...bgs.map(bg => contrast(candidate, bg))) >= TEXT_CONTRAST) return candidate;
+    }
+    return toward;
+  }
+
+  // Lowest contrast per mode, and whether it passes 3:1
   function check(hex) {
     const result = {};
     for (const mode of ['light', 'dark']) {
@@ -86,6 +116,8 @@
     const root  = document.documentElement.style;
     root.setProperty('--accent', color);
     root.setProperty('--on-accent', text);
+    root.setProperty('--accent-text-light', textVariant(color, 'light'));
+    root.setProperty('--accent-text-dark',  textVariant(color, 'dark'));
     // Hover shade moves away from the text colour, so it stays readable
     root.setProperty('--accent-dark',
       `color-mix(in srgb, ${color} 78%, ${text === '#ffffff' ? '#000' : '#fff'})`);
@@ -103,8 +135,8 @@
   }
 
   window.Accent = {
-    DEFAULT, LS_KEY, MIN_CONTRAST,
-    normalize, contrast, textOn, check,
+    DEFAULT, LS_KEY, MIN_CONTRAST, TEXT_CONTRAST,
+    normalize, contrast, textOn, textVariant, check,
     defaultColor, current, apply, applyCurrent, setEdited,
   };
 
