@@ -653,6 +653,9 @@ article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
     padding-bottom: 240px !important;
   }
   .tile[data-size="2x2"] { grid-column: span 2; grid-row: span 2; }
+
+  /* The sidebar strip already shows the profile right above the grid */
+  .tile-profile { display: none; }
 }
 
 @media (max-width: 420px) {
@@ -2324,6 +2327,8 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
   padding: 16px 18px !important;
   gap: 10px !important;
 }
+/* Mirrors the ≤768px rule: the sidebar strip already shows the profile */
+#page-grid.mobile-preview-active .tile-profile { display: none !important; }
 #page-grid.mobile-preview-active .profile-avatar {
   width: 52px !important;
   height: 52px !important;
