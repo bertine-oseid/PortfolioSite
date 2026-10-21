@@ -715,6 +715,18 @@ article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
 /* Clicks go to the tile; hide the play icon while the preview runs */
 .video-play-overlay { pointer-events: none; }
 .tile-video.is-playing .video-play-overlay { opacity: 0; }
+/* Edit Mode: video tile without a preview yet */
+.video-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(255,255,255,0.75);
+}
 
 /* YouTube / Vimeo iframe */
 .video-embed-wrap {
@@ -1725,6 +1737,13 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
   flex-direction: column;
   gap: 16px;
 }
+/* Per-type fields are injected into one wrapper — space them like the rest */
+#abDynamicFields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+#abDynamicFields:empty { display: none; }
 
 .modal-footer {
   display: flex;

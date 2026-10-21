@@ -426,9 +426,22 @@ function renderVideo(tile) {
   const linkBtn   = hasLink ? watchBtn(tile.url) : '';
   const hasThumb  = !!tile.thumbnail;
   const thumbAttr = hasThumb
-    ? ` style="background-image:url('${tile.thumbnail}');background-size:cover;background-position:center;"`
+    ? ` style="background-image:url('${videoSrc(tile.thumbnail)}');background-size:cover;background-position:center;"`
     : '';
-  const poster = (tile.poster || tile.thumbnail) ? `poster="${tile.poster || tile.thumbnail}"` : '';
+  const posterSrc = tile.poster || tile.thumbnail;
+  const poster = posterSrc ? `poster="${videoSrc(posterSrc)}"` : '';
+
+  if (!tile.src) {
+    const hint = I18N.isAdminMode()
+      ? '<div class="video-empty">Ingen forhåndsvisning ennå – trykk ✏️ for å legge til</div>'
+      : '';
+    return `
+    <div class="tile tile-video${hasThumb ? ' has-thumbnail' : ''}" data-size="${tile.size}" data-tile-id="${tileId}" data-embed="none"${thumbAttr}>
+      ${hint}
+      <div class="video-overlay-bar"><span class="video-label" data-ce-tile-id="${tileId}" data-ce-field="label">${label}</span>${linkBtn}</div>
+    </div>`;
+  }
+
   return `
     <div class="tile tile-video${hasThumb ? ' has-thumbnail' : ''}" data-size="${tile.size}" data-tile-id="${tileId}" data-embed="false"${thumbAttr}>
       <video class="video-el" ${poster} muted loop playsinline preload="metadata" src="${videoSrc(tile.src)}"></video>

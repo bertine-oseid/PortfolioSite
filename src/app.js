@@ -308,20 +308,26 @@ window.removeCustomTile = removeCustomTile;
       </div>`,
 
     video: `
+      <p class="form-hint">Flisen viser en kort video uten lyd. «Se hele»-knappen kan sende besøkende videre til hele videoen.</p>
       <div class="form-group">
-        <label class="form-label" for="abLabel">Label <span class="form-optional">(optional)</span></label>
-        <input type="text" class="form-input" id="abLabel" placeholder="e.g. My Showreel" />
+        <label class="form-label" for="abLabel">Tittel <span class="form-optional">(valgfri)</span></label>
+        <input type="text" class="form-input" id="abLabel" placeholder="f.eks. Showreel 2026" />
+        <p class="form-hint">Vises nederst på flisen.</p>
       </div>
       <div class="form-group">
-        <label class="form-label" for="abSrc">Video URL or File Path</label>
-        <input type="text" class="form-input" id="abSrc"
-               placeholder="https://youtube.com/watch?v=... or /videos/reel.mp4" />
-        <p class="form-hint">Supports YouTube, Vimeo, and direct .mp4 / .webm files.</p>
+        <label class="form-label" for="abSrc">Forhåndsvisning – kort video uten lyd <span class="form-optional">(påkrevd)</span></label>
+        <input type="text" class="form-input" id="abSrc" placeholder="media/min-video.mp4" />
+        <p class="form-hint">Last opp en kort video til <strong>media</strong>-mappen på GitHub, og skriv navnet her, f.eks. <code>media/showreel.mp4</code>. Bruk .mp4 eller .webm, helst under 5 MB. Den spilles av når musen er over flisen (PC) eller når flisen er synlig (mobil). YouTube- og Vimeo-lenker virker også, men spilles ikke av ved musepeker.</p>
       </div>
       <div class="form-group">
-        <label class="form-label" for="abThumb">Thumbnail / Poster Image URL <span class="form-optional">(optional)</span></label>
-        <input type="url" class="form-input" id="abThumb" placeholder="https://example.com/poster.jpg" />
-        <p class="form-hint">Shown before the video loads or as a box background image.</p>
+        <label class="form-label" for="abUrl">Lenke til hele videoen <span class="form-optional">(valgfri)</span></label>
+        <input type="text" class="form-input" id="abUrl" placeholder="https://drive.google.com/..." />
+        <p class="form-hint">Åpnes i en ny fane når noen trykker «Se hele». Google Drive: trykk <strong>Del</strong> og velg «Alle som har linken». Står feltet tomt, vises ingen «Se hele»-knapp.</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="abThumb">Forsidebilde <span class="form-optional">(valgfritt)</span></label>
+        <input type="text" class="form-input" id="abThumb" placeholder="media/forsidebilde.jpg" />
+        <p class="form-hint">Bilde som vises før videoen har lastet.</p>
       </div>`,
 
     'blog-preview': `
@@ -426,6 +432,8 @@ window.removeCustomTile = removeCustomTile;
     } else if (tile.type === 'video') {
       document.getElementById('abLabel').value  = tile.label     || '';
       document.getElementById('abSrc').value    = tile.src       || '';
+      // Older video tiles stored the preview itself as the link
+      document.getElementById('abUrl').value    = tile.url && tile.url !== tile.src ? tile.url : '';
       document.getElementById('abThumb').value  = tile.thumbnail || '';
     } else if (tile.type === 'blog-preview') {
       document.getElementById('abLabel').value = tile.label || '';
@@ -552,10 +560,17 @@ window.removeCustomTile = removeCustomTile;
       });
     } else if (type === 'video') {
       const src = document.getElementById('abSrc')?.value.trim();
-      if (!src) { valid = false; }
+      if (!src) {
+        I18N.showToast('Skriv inn adressen til forhåndsvisningen.');
+        document.getElementById('abSrc')?.focus();
+        return;
+      }
+      let url = document.getElementById('abUrl')?.value.trim() || '';
+      // "drive.google.com/..." without https:// would open as a page on this site
+      if (url && !/^[a-z]+:/i.test(url)) url = 'https://' + url;
       data = Object.assign(data, {
         src,
-        url:       src,
+        url,
         label:     document.getElementById('abLabel')?.value.trim() || '',
         thumbnail: document.getElementById('abThumb')?.value.trim() || '',
       });
