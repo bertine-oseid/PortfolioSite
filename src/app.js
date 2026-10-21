@@ -103,7 +103,7 @@ function triggerEditCursorBubble() {
 
   const bubble = document.createElement('div');
   bubble.className = 'edit-cursor-bubble';
-  bubble.textContent = 'Edit Mode ✍️';
+  bubble.textContent = 'Redigeringsmodus ✍️';
   document.body.appendChild(bubble);
 
   const updatePosition = e => {
@@ -308,20 +308,33 @@ window.removeCustomTile = removeCustomTile;
       </div>`,
 
     video: `
+      <p class="form-hint">Flisen viser en kort video uten lyd. «Se hele»-knappen kan sende besøkende videre til hele videoen.</p>
       <div class="form-group">
-        <label class="form-label" for="abLabel">Label <span class="form-optional">(optional)</span></label>
-        <input type="text" class="form-input" id="abLabel" placeholder="e.g. My Showreel" />
+        <label class="form-label" for="abLabel">Tittel <span class="form-optional">(valgfri)</span></label>
+        <input type="text" class="form-input" id="abLabel" placeholder="f.eks. Showreel 2026" />
+        <p class="form-hint">Vises nederst på flisen.</p>
       </div>
       <div class="form-group">
-        <label class="form-label" for="abSrc">Video URL or File Path</label>
-        <input type="text" class="form-input" id="abSrc"
-               placeholder="https://youtube.com/watch?v=... or /videos/reel.mp4" />
-        <p class="form-hint">Supports YouTube, Vimeo, and direct .mp4 / .webm files.</p>
+        <label class="form-label" for="abSrc">Forhåndsvisning – kort video uten lyd <span class="form-optional">(påkrevd)</span></label>
+        <input type="text" class="form-input" id="abSrc" placeholder="media/min-video.mp4" />
+        <p class="form-hint">Last opp en kort video til <strong>media</strong>-mappen på GitHub, og skriv navnet her, f.eks. <code>media/showreel.mp4</code>. Bruk .mp4 eller .webm, helst under 5 MB. Den spilles av når musen er over flisen (PC) eller når flisen er synlig (mobil). YouTube- og Vimeo-lenker virker også, men spilles ikke av ved musepeker.</p>
       </div>
       <div class="form-group">
-        <label class="form-label" for="abThumb">Thumbnail / Poster Image URL <span class="form-optional">(optional)</span></label>
-        <input type="url" class="form-input" id="abThumb" placeholder="https://example.com/poster.jpg" />
-        <p class="form-hint">Shown before the video loads or as a box background image.</p>
+        <label class="form-label" for="abUrl">Lenke til hele videoen <span class="form-optional">(valgfri)</span></label>
+        <input type="text" class="form-input" id="abUrl" placeholder="https://drive.google.com/..." />
+        <p class="form-hint">Åpnes i en ny fane når noen trykker «Se hele». Google Drive: trykk <strong>Del</strong> og velg «Alle som har linken». Står feltet tomt, vises ingen «Se hele»-knapp.</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="abThumb">Forsidebilde <span class="form-optional">(valgfritt)</span></label>
+        <input type="text" class="form-input" id="abThumb" placeholder="media/forsidebilde.jpg" />
+        <p class="form-hint">Bilde som vises før videoen har lastet.</p>
+      </div>`,
+
+    'blog-preview': `
+      <div class="form-group">
+        <label class="form-label" for="abLabel">Overskrift <span class="form-optional">(valgfri)</span></label>
+        <input type="text" class="form-input" id="abLabel" placeholder="Siste innlegg" />
+        <p class="form-hint">Flisen viser de 3 nyeste blogginnleggene. Et klikk på flisen åpner bloggen.</p>
       </div>`,
 
     divider: `
@@ -419,7 +432,11 @@ window.removeCustomTile = removeCustomTile;
     } else if (tile.type === 'video') {
       document.getElementById('abLabel').value  = tile.label     || '';
       document.getElementById('abSrc').value    = tile.src       || '';
+      // Older video tiles stored the preview itself as the link
+      document.getElementById('abUrl').value    = tile.url && tile.url !== tile.src ? tile.url : '';
       document.getElementById('abThumb').value  = tile.thumbnail || '';
+    } else if (tile.type === 'blog-preview') {
+      document.getElementById('abLabel').value = tile.label || '';
     } else if (tile.type === 'divider') {
       document.getElementById('abDivStyle').value = tile.style   || 'line';
       document.getElementById('abContent').value  = tile.content || '';
@@ -451,13 +468,14 @@ window.removeCustomTile = removeCustomTile;
     renderFields(type);
     setSize(tile?.size || '1x1');
 
-    if (tile) {
-      prefillFields(tile);
-      modalTitle.textContent    = 'Edit Box';
-      submitBtn.textContent     = 'Save Changes';
+    if (tile) prefillFields(tile);
+    // The dock passes { type } only — that's a new box, not an edit
+    if (tile?.id) {
+      modalTitle.textContent    = 'Rediger boks';
+      submitBtn.textContent     = 'Lagre endringer';
     } else {
-      modalTitle.textContent    = 'Add New Box';
-      submitBtn.textContent     = 'Add Box';
+      modalTitle.textContent    = 'Legg til ny boks';
+      submitBtn.textContent     = 'Legg til boks';
     }
 
     modal.classList.add('open');
@@ -469,8 +487,8 @@ window.removeCustomTile = removeCustomTile;
     editingTileId = null;
     // Reset labels after transition
     setTimeout(() => {
-      modalTitle.textContent = 'Add New Box';
-      submitBtn.textContent  = 'Add Box';
+      modalTitle.textContent = 'Legg til ny boks';
+      submitBtn.textContent  = 'Legg til boks';
     }, 200);
   }
 
@@ -499,6 +517,10 @@ window.removeCustomTile = removeCustomTile;
         description: document.getElementById('abDesc')?.value.trim()  || '',
         emoji:       document.getElementById('abEmoji')?.value.trim() || '🔗',
         thumbnail:   document.getElementById('abThumb')?.value.trim() || '',
+      });
+    } else if (type === 'blog-preview') {
+      data = Object.assign(data, {
+        label: document.getElementById('abLabel')?.value.trim() || '',
       });
     } else if (type === 'divider') {
       data = Object.assign(data, {
@@ -538,16 +560,23 @@ window.removeCustomTile = removeCustomTile;
       });
     } else if (type === 'video') {
       const src = document.getElementById('abSrc')?.value.trim();
-      if (!src) { valid = false; }
+      if (!src) {
+        I18N.showToast('Skriv inn adressen til forhåndsvisningen.');
+        document.getElementById('abSrc')?.focus();
+        return;
+      }
+      let url = document.getElementById('abUrl')?.value.trim() || '';
+      // "drive.google.com/..." without https:// would open as a page on this site
+      if (url && !/^[a-z]+:/i.test(url)) url = 'https://' + url;
       data = Object.assign(data, {
         src,
-        url:       src,
+        url,
         label:     document.getElementById('abLabel')?.value.trim() || '',
         thumbnail: document.getElementById('abThumb')?.value.trim() || '',
       });
     }
 
-    if (!valid) { I18N.showToast('Please fill in the required fields.'); return; }
+    if (!valid) { I18N.showToast('Fyll inn de påkrevde feltene.'); return; }
 
     const isEditing = !!editingTileId;
     if (isEditing) {
@@ -558,7 +587,7 @@ window.removeCustomTile = removeCustomTile;
 
     close();
     applyLayout(true);
-    I18N.showToast(isEditing ? 'Box updated!' : 'New box added!');
+    I18N.showToast(isEditing ? 'Boksen er oppdatert!' : 'Ny boks lagt til!');
   }
 
   typeSelect.addEventListener('change', () => {
@@ -721,7 +750,10 @@ function applyLayout(force) {
   const name = getLayoutName();
   if (name === activeLayout && !force) return;
   activeLayout = name;
-  buildGrid(resolveTiles(name));
+  // Visitors always see the saved version (also after a language
+  // switch or breakpoint change); Edit Mode works on local data.
+  const saved = !I18N.isAdminMode() && window.Store ? Store.savedLayout(name) : null;
+  buildGrid(saved || resolveTiles(name));
 }
 
 // Re-render instantly on breakpoint crossing, debounce for mid-range resizes
@@ -1031,16 +1063,26 @@ document.getElementById('exportDataBtn')?.addEventListener('click', async e => {
   const workspace = document.getElementById('page-grid');
   if (!btn || !workspace) return;
 
+  // The label says what a click will switch TO
+  function setLabel(active) {
+    btn.textContent = active ? '🖥️ PC-visning' : '📱 Mobilvisning';
+    btn.setAttribute('aria-label', active
+      ? 'Vis siden slik den ser ut på PC'
+      : 'Vis siden slik den ser ut på mobil');
+  }
+
   function resetPreview() {
     workspace.classList.remove('mobile-preview-active');
     document.body.classList.remove('mobile-preview-on');
     btn.classList.remove('is-active');
+    setLabel(false);
   }
 
   btn.addEventListener('click', () => {
     const active = workspace.classList.toggle('mobile-preview-active');
     document.body.classList.toggle('mobile-preview-on', active);
     btn.classList.toggle('is-active', active);
+    setLabel(active);
     // No re-render — CSS handles the reflow
   });
 

@@ -712,6 +712,21 @@ article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
   background: rgba(255,255,255,0.28);
   transform: scale(1.06);
 }
+/* Clicks go to the tile; hide the play icon while the preview runs */
+.video-play-overlay { pointer-events: none; }
+.tile-video.is-playing .video-play-overlay { opacity: 0; }
+/* Edit Mode: video tile without a preview yet */
+.video-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(255,255,255,0.75);
+}
 
 /* YouTube / Vimeo iframe */
 .video-embed-wrap {
@@ -1722,6 +1737,13 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
   flex-direction: column;
   gap: 16px;
 }
+/* Per-type fields are injected into one wrapper — space them like the rest */
+#abDynamicFields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+#abDynamicFields:empty { display: none; }
 
 .modal-footer {
   display: flex;
@@ -1948,6 +1970,26 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
 
 .dock-btn svg { flex-shrink: 0; }
 
+/* Toolbar button labels never wrap (e.g. "Legg til boks") */
+.add-box-btn,
+.export-data-btn,
+.mobile-preview-btn,
+.admin-toggle-btn { white-space: nowrap; }
+
+/* Mid widths (tablet / small laptop): no centring spacer, a tighter
+   dock, and the action buttons wrap below it instead of overflowing */
+@media (min-width: 769px) and (max-width: 1279px) {
+  .admin-control-bar {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 12px;
+    padding: 10px 16px;
+  }
+  .admin-bar-left { display: none; }
+  .admin-bar-right { flex: 0 1 auto; }
+  .dock-btn { padding: 6px 6px; min-width: 40px; }
+}
+
 .dock-btn:hover {
   background: var(--accent-light);
   color: var(--accent);
@@ -2114,7 +2156,16 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
     justify-content: space-around;
     flex-wrap: nowrap;
     gap: 0;
+    /* Too many blocks for a phone: swipe sideways instead of clipping */
+    overflow-x: auto;
+    scrollbar-width: none;
   }
+  .creation-dock::-webkit-scrollbar { display: none; }
+  /* Centring with justify-content would push the first buttons out of
+     reach when it overflows; auto margins centre only when there's room */
+  .creation-dock { justify-content: flex-start; }
+  .creation-dock > :first-child { margin-left: auto; }
+  .creation-dock > :last-child  { margin-right: auto; }
 
   /* Hide text label + divider — icons only on mobile */
   .dock-label,
@@ -2143,6 +2194,9 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
     font-size: 12px;
     padding: 8px 14px;
   }
+
+  /* Already looking at the phone layout — the preview toggle has no use */
+  .admin-mode .mobile-preview-btn { display: none; }
 }
 
 /* ============================================================

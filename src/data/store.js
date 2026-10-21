@@ -106,6 +106,14 @@
     return json;
   }
 
+  // ── Store.savedLayout(name) ───────────────────────────────────
+  // The saved tile array for a breakpoint ('desktop' | 'mobile'),
+  // from KV or data.json, or null if there is none.
+  function savedLayout(name) {
+    const tiles = loaded?.layout?.[name];
+    return Array.isArray(tiles) && tiles.length ? tiles : null;
+  }
+
   // ── Store.syncLocalFromServer() ───────────────────────────────
   // Overwrites this browser's editing state with the content saved
   // in KV. Runs at most once per page load; unsaved edits from an
@@ -207,6 +215,6 @@
   }
 
   // ── Public API ────────────────────────────────────────────────
-  window.Store = { init, syncLocalFromServer, save };
+  window.Store = { init, savedLayout, syncLocalFromServer, save };
 
 })();

@@ -98,7 +98,13 @@ function renderText(tile) {
 function renderBlogPreview(tile) {
   const t     = localTile(tile);
   const posts = I18N.currentPosts().slice(0, 3);
-  const label = t.label || '';
+  // Custom blog tiles keep their own label; the stock "blog" tile uses i18n
+  const label = tile.custom
+    ? (tile.label || (I18N.activeLang() === 'no' ? 'Siste innlegg' : 'Latest writing'))
+    : (t.label || '');
+  const labelAttr = tile.custom
+    ? `data-ce-tile-id="${tile.id}" data-ce-field="label"`
+    : `data-i18n-field="tiles.blog.label"`;
   const postsHtml = posts.map(p => `
     <div class="blog-tile-post" onclick="navigateToPost('${p.id}')">
       <div class="blog-tile-post-title">${p.title}</div>
@@ -106,7 +112,7 @@ function renderBlogPreview(tile) {
     </div>`).join('');
   return `
     <div class="tile tile-blog-preview clickable" data-size="${tile.size}" data-tile-id="${tile.id}" onclick="navigateTo('blog')">
-      <div class="blog-tile-label" data-i18n-field="tiles.blog.label">${label}</div>
+      <div class="blog-tile-label" ${labelAttr}>${label}</div>
       <div class="blog-tile-posts">${postsHtml}</div>
     </div>`;
 }
@@ -120,7 +126,7 @@ function makeCustomEditable(el) {
   if (!tileId || !field) return;
 
   el.classList.add('i18n-editable');
-  el.title = 'Click to edit';
+  el.title = 'Klikk for å endre';
 
   el.addEventListener('click', function handler(e) {
     if (el.isContentEditable) return; // already in edit mode
@@ -143,12 +149,15 @@ function makeCustomEditable(el) {
     el.addEventListener('blur', function save() {
       el.removeEventListener('blur', save);
       el.contentEditable = 'false';
-      const newVal = el.innerText.trim();
+      // innerText follows CSS text-transform (e.g. uppercase labels),
+      // so read the raw text when the element is transformed
+      const raw    = getComputedStyle(el).textTransform === 'none' ? el.innerText : el.textContent;
+      const newVal = raw.trim();
       if (newVal !== original.trim()) {
         if (typeof window.updateCustomTile === 'function') {
           window.updateCustomTile(tileId, { [field]: newVal });
         }
-        I18N.showToast('Saved');
+        I18N.showToast('Endret – husk å trykke Lagre');
       }
     });
 
@@ -214,16 +223,19 @@ function buildGrid(orderedTiles) {
     injectAdminControls(grid);
   }
 
+  // Preview videos: play on hover (desktop) or when visible (mobile)
+  wireVideoTiles(grid);
+
   // Initialise (or re-initialise) SortableJS
   if (typeof window.initSortable === 'function') window.initSortable();
 }
 
 // ── Admin controls (bottom-left strip, appears on tile hover) ─
 const SIZE_OPTIONS = [
-  { key: '1x1', label: 'Small', hint: '1×1' },
-  { key: '2x1', label: 'Wide',  hint: '2×1' },
-  { key: '1x2', label: 'Tall',  hint: '1×2' },
-  { key: '2x2', label: 'Big',   hint: '2×2' },
+  { key: '1x1', label: 'Liten', hint: '1×1' },
+  { key: '2x1', label: 'Bred',  hint: '2×1' },
+  { key: '1x2', label: 'Høy',   hint: '1×2' },
+  { key: '2x2', label: 'Stor',  hint: '2×2' },
 ];
 
 const IC_RESIZE = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>`;
@@ -306,7 +318,7 @@ function injectAdminControls(grid) {
     // ── Resize button (opens portal) ──────────────────────────
     const resizeBtn = document.createElement('button');
     resizeBtn.className = 'ac-btn ac-resize-btn';
-    resizeBtn.title = 'Resize';
+    resizeBtn.title = 'Endre størrelse';
     resizeBtn.innerHTML = IC_RESIZE;
     resizeBtn.addEventListener('click', e => {
       e.stopPropagation();
@@ -317,7 +329,7 @@ function injectAdminControls(grid) {
     // ── Edit button (all tiles) ───────────────────────────────
     const editBtn = document.createElement('button');
     editBtn.className = 'ac-btn ac-edit-btn';
-    editBtn.title = 'Edit box';
+    editBtn.title = 'Rediger boks';
     editBtn.innerHTML = IC_EDIT;
     editBtn.addEventListener('click', e => {
       e.stopPropagation();
@@ -330,7 +342,7 @@ function injectAdminControls(grid) {
         if (firstEditable) {
           firstEditable.click();
         } else {
-          I18N.showToast('Click any text on this tile to edit it');
+          I18N.showToast('Klikk på en tekst i boksen for å endre den');
         }
       }
     });
@@ -339,7 +351,7 @@ function injectAdminControls(grid) {
     // ── Delete button (all tiles) ────────────────────────────
     const delBtn = document.createElement('button');
     delBtn.className = 'ac-btn ac-delete-btn';
-    delBtn.title = isCustom ? 'Delete box' : 'Hide box';
+    delBtn.title = isCustom ? 'Slett boks' : 'Skjul boks';
     delBtn.innerHTML = IC_DELETE;
     delBtn.addEventListener('click', e => {
       e.stopPropagation();
@@ -383,22 +395,23 @@ function getEmbedUrl(url) {
   return null;
 }
 
+// Relative paths like "media/clip.mp4" must resolve from the site
+// root, so they work on both / and /admin
+function videoSrc(src) {
+  if (!src) return '';
+  return /^([a-z]+:|\/)/i.test(src) ? src : '/' + src;
+}
+
 function renderVideo(tile) {
   const embedUrl = getEmbedUrl(tile.src || tile.url || '');
-  const hasLink  = !!(tile.url && tile.url !== '#');
   const label    = tile.label || '';
-  const linkBtn  = hasLink
-    ? `<a class="video-watch-btn" href="${tile.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="Watch full video"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Watch full</a>`
-    : '';
-
-  const hasThumb  = !!tile.thumbnail;
-  const thumbAttr = hasThumb && !embedUrl
-    ? ` style="background-image:url('${tile.thumbnail}');background-size:cover;background-position:center;"`
-    : '';
-
-  const tileId = tile.id || '';
+  const tileId   = tile.id || '';
+  const watchTxt = I18N.activeLang() === 'no' ? 'Se hele' : 'Watch full';
+  const watchBtn = url =>
+    `<a class="video-watch-btn" href="${url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" aria-label="${watchTxt}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>${watchTxt}</a>`;
 
   if (embedUrl) {
+    const linkBtn = tile.url && tile.url !== '#' ? watchBtn(tile.url) : '';
     return `
       <div class="tile tile-video" data-size="${tile.size}" data-tile-id="${tileId}" data-embed="true">
         <div class="video-embed-wrap">
@@ -408,35 +421,89 @@ function renderVideo(tile) {
       </div>`;
   }
 
-  const src  = tile.src || '';
-  const ext  = src.split('.').pop() || 'mp4';
-  const poster = (tile.poster || tile.thumbnail) ? `poster="${tile.poster || tile.thumbnail}"` : '';
-  const id   = 'vid_' + Math.random().toString(36).slice(2, 8);
+  // "Se hele" only links somewhere other than the preview file itself
+  const hasLink   = !!(tile.url && tile.url !== '#' && tile.url !== tile.src);
+  const linkBtn   = hasLink ? watchBtn(tile.url) : '';
+  const hasThumb  = !!tile.thumbnail;
+  const thumbAttr = hasThumb
+    ? ` style="background-image:url('${videoSrc(tile.thumbnail)}');background-size:cover;background-position:center;"`
+    : '';
+  const posterSrc = tile.poster || tile.thumbnail;
+  const poster = posterSrc ? `poster="${videoSrc(posterSrc)}"` : '';
+
+  if (!tile.src) {
+    const hint = I18N.isAdminMode()
+      ? '<div class="video-empty">Ingen forhåndsvisning ennå – trykk ✏️ for å legge til</div>'
+      : '';
+    return `
+    <div class="tile tile-video${hasThumb ? ' has-thumbnail' : ''}" data-size="${tile.size}" data-tile-id="${tileId}" data-embed="none"${thumbAttr}>
+      ${hint}
+      <div class="video-overlay-bar"><span class="video-label" data-ce-tile-id="${tileId}" data-ce-field="label">${label}</span>${linkBtn}</div>
+    </div>`;
+  }
+
   return `
-    <div class="tile tile-video${hasThumb ? ' has-thumbnail' : ''}" data-size="${tile.size}" data-tile-id="${tileId}" data-embed="false"${thumbAttr} onclick="toggleVideo('${id}')">
-      <video id="${id}" class="video-el" ${poster} muted loop playsinline preload="metadata"><source src="${src}" type="video/${ext}"></video>
-      <div class="video-play-overlay" id="ov_${id}">
-        <div class="video-play-btn" aria-label="Play video"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg></div>
+    <div class="tile tile-video${hasThumb ? ' has-thumbnail' : ''}" data-size="${tile.size}" data-tile-id="${tileId}" data-embed="false"${thumbAttr}>
+      <video class="video-el" ${poster} muted loop playsinline preload="metadata" src="${videoSrc(tile.src)}"></video>
+      <div class="video-play-overlay">
+        <div class="video-play-btn" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg></div>
       </div>
       <div class="video-overlay-bar"><span class="video-label" data-ce-tile-id="${tileId}" data-ce-field="label">${label}</span>${linkBtn}</div>
     </div>`;
 }
 
-function toggleVideo(id) {
-  const vid = document.getElementById(id);
-  const ov  = document.getElementById('ov_' + id);
-  if (!vid) return;
-  if (vid.paused) {
-    vid.play();
-    ov.style.opacity = '0';
-    ov.style.pointerEvents = 'none';
-  } else {
-    vid.pause();
-    ov.style.opacity = '1';
-    ov.style.pointerEvents = 'auto';
-  }
+// ── Preview playback ───────────────────────────────────────────
+// Desktop (real mouse): play while hovered, rewind on leave.
+// Touch devices: play while at least half the tile is on screen.
+// Reduced motion: never autoplay. Click/tap always toggles, which
+// also covers browsers that refuse autoplay (e.g. iOS Low Power).
+let _videoObserver = null;
+
+function playVideo(vid) {
+  const p = vid.play();
+  if (p && p.catch) p.catch(() => {}); // refused — play icon stays, tap starts it
 }
-window.toggleVideo = toggleVideo;
+
+function wireVideoTiles(grid) {
+  if (_videoObserver) { _videoObserver.disconnect(); _videoObserver = null; }
+
+  const tiles = grid.querySelectorAll('.tile-video[data-embed="false"]');
+  if (!tiles.length) return;
+
+  const auto  = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hover = matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  if (auto && !hover && 'IntersectionObserver' in window) {
+    _videoObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const vid = entry.target.querySelector('video');
+        if (!vid) return;
+        if (entry.isIntersecting) playVideo(vid);
+        else vid.pause();
+      });
+    }, { threshold: 0.5 });
+  }
+
+  tiles.forEach(tile => {
+    const vid = tile.querySelector('video');
+    if (!vid) return;
+
+    vid.addEventListener('play',  () => tile.classList.add('is-playing'));
+    vid.addEventListener('pause', () => tile.classList.remove('is-playing'));
+
+    if (auto && hover) {
+      tile.addEventListener('mouseenter', () => playVideo(vid));
+      tile.addEventListener('mouseleave', () => { vid.pause(); vid.currentTime = 0; });
+    }
+    if (_videoObserver) _videoObserver.observe(tile);
+
+    tile.addEventListener('click', e => {
+      if (e.target.closest('a, .admin-controls, .ac-btn, [data-ce-field]')) return;
+      if (vid.paused) playVideo(vid);
+      else vid.pause();
+    });
+  });
+}
 
 // ── Divider tile ──────────────────────────────────────────────
 function renderDivider(tile) {
