@@ -190,6 +190,54 @@ body {
   background: rgba(249, 115, 22, 0.15);
 }
 
+/* ---- NAV: PHONES (≤ 680px) ----
+   One row needs ~500px (~635px in Edit Mode), so the nav becomes two rows:
+   name + org.nr. | NO/EN, theme, edit   /   Hjem, Blogg        */
+@media (max-width: 680px) {
+  .site-header { height: auto; }
+  .nav {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    grid-template-areas:
+      "logo  lang  theme edit"
+      "links links links links";
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 8px;
+    padding: 10px 16px;
+  }
+  /* Visitors have no edit button — drop its empty column */
+  body:not(.admin-page) .nav {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "logo  lang  theme"
+      "links links links";
+  }
+  .nav-logo {
+    grid-area: logo;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    margin-right: 0;
+    font-size: 17px;
+    white-space: nowrap;
+  }
+  .org-number { font-size: 10px; }
+  .nav-links { grid-area: links; }
+  .lang-toggle { grid-area: lang; }
+  .theme-toggle { grid-area: theme; width: 32px; height: 32px; }
+  .nav-edit-toggle { grid-area: edit; padding: 7px 10px; }
+  /* Pencil + dot only; the button's aria-label still names it */
+  .nav-edit-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
 /* ---- APP WRAPPER ---- */
 #app {
   display: block;
