@@ -143,9 +143,10 @@
 
       <!-- Right slot: Rediger / Ferdig toggle (always visible) -->
       <div class="admin-bar-right">
-        <button id="mobilePreviewBtn" class="mobile-preview-btn" aria-label="Vis siden slik den ser ut på mobil">
-          📱 Mobilvisning
-        </button>
+        <div class="view-toggle" id="viewToggle" role="group" aria-label="Visning">
+          <button type="button" class="view-opt is-active" data-view="desktop" aria-pressed="true" title="PC-oppsett">16:9</button>
+          <button type="button" class="view-opt" data-view="mobile" aria-pressed="false" title="Mobiloppsett">9:16</button>
+        </div>
         <button id="exportDataBtn" class="export-data-btn" aria-label="Lagre endringer">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           <span class="save-label">Lagre</span>

@@ -1503,37 +1503,43 @@ body:not(.admin-page) .admin-toggle-btn { display: none; }
   color: var(--bg);
 }
 
-/* Mobile Preview toggle button — admin mode only */
-.mobile-preview-btn {
+/* 16:9 / 9:16 view toggle — admin mode only.
+   The selected option uses --accent, so it follows the accent colour. */
+.view-toggle {
   display: none;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
+  gap: 2px;
+  padding: 3px;
   border-radius: 999px;
   border: 1px solid var(--border-hover);
   background: var(--bg-card);
+  box-shadow: var(--shadow);
+  white-space: nowrap;
+}
+.admin-mode .view-toggle { display: flex; }
+.view-opt {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 999px;
+  background: none;
   color: var(--text-secondary);
   font-family: var(--font-sans);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: var(--shadow);
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
 }
-.admin-mode .mobile-preview-btn { display: flex; }
-.mobile-preview-btn:hover {
+.view-opt:hover:not(.is-active) {
   background: var(--bg-card-hover);
-  border-color: var(--text-secondary);
+  color: var(--text-primary);
 }
-.mobile-preview-btn.is-active {
+.view-opt.is-active {
   background: var(--accent);
-  border-color: var(--accent);
   color: #fff;
+  cursor: default;
 }
-.mobile-preview-btn.is-active:hover {
-  background: var(--accent-dark, #ea6c0e);
-  border-color: var(--accent-dark, #ea6c0e);
+.view-opt.is-active:hover {
+  background: color-mix(in srgb, var(--accent) 85%, #000);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -2024,7 +2030,7 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
 /* Toolbar button labels never wrap (e.g. "Legg til boks") */
 .add-box-btn,
 .export-data-btn,
-.mobile-preview-btn,
+.view-toggle,
 .admin-toggle-btn { white-space: nowrap; }
 
 /* Mid widths (tablet / small laptop): no centring spacer, a tighter
@@ -2246,8 +2252,8 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
     padding: 8px 14px;
   }
 
-  /* Already looking at the phone layout — the preview toggle has no use */
-  .admin-mode .mobile-preview-btn { display: none; }
+  /* Already looking at the phone layout — the view toggle has no use */
+  .admin-mode .view-toggle { display: none; }
 }
 
 /* ============================================================
@@ -2506,7 +2512,7 @@ body.mobile-preview-on .admin-bar-right {
 }
 
 /* Action buttons fill the sidebar width */
-body.mobile-preview-on .mobile-preview-btn,
+body.mobile-preview-on .view-toggle,
 body.mobile-preview-on .export-data-btn,
 body.mobile-preview-on .add-box-btn,
 body.mobile-preview-on .admin-toggle-btn {
@@ -2516,9 +2522,10 @@ body.mobile-preview-on .admin-toggle-btn {
   white-space: nowrap !important;
 }
 
-/* Mobile Preview button already active — give it a compact label */
-body.mobile-preview-on .mobile-preview-btn {
-  font-size: 12px !important;
+/* View toggle in the sidebar: both options share the width */
+body.mobile-preview-on .view-opt {
+  flex: 1;
+  font-size: 12px;
 }
 
 

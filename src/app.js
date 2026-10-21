@@ -1059,31 +1059,28 @@ document.getElementById('exportDataBtn')?.addEventListener('click', async e => {
 // applyLayout('mobile') would filter through CONFIG.layouts.mobile
 // which only knows about stock tile IDs, dropping any custom tiles.
 (function () {
-  const btn       = document.getElementById('mobilePreviewBtn');
+  const group     = document.getElementById('viewToggle');
   const workspace = document.getElementById('page-grid');
-  if (!btn || !workspace) return;
+  if (!group || !workspace) return;
 
-  // The label says what a click will switch TO
-  function setLabel(active) {
-    btn.textContent = active ? '🖥️ PC-visning' : '📱 Mobilvisning';
-    btn.setAttribute('aria-label', active
-      ? 'Vis siden slik den ser ut på PC'
-      : 'Vis siden slik den ser ut på mobil');
-  }
-
-  function resetPreview() {
-    workspace.classList.remove('mobile-preview-active');
-    document.body.classList.remove('mobile-preview-on');
-    btn.classList.remove('is-active');
-    setLabel(false);
-  }
-
-  btn.addEventListener('click', () => {
-    const active = workspace.classList.toggle('mobile-preview-active');
-    document.body.classList.toggle('mobile-preview-on', active);
-    btn.classList.toggle('is-active', active);
-    setLabel(active);
+  // view: 'desktop' (16:9) or 'mobile' (9:16)
+  function setView(view) {
+    const mobile = view === 'mobile';
+    workspace.classList.toggle('mobile-preview-active', mobile);
+    document.body.classList.toggle('mobile-preview-on', mobile);
+    group.querySelectorAll('.view-opt').forEach(opt => {
+      const on = opt.dataset.view === view;
+      opt.classList.toggle('is-active', on);
+      opt.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
     // No re-render — CSS handles the reflow
+  }
+
+  function resetPreview() { setView('desktop'); }
+
+  group.addEventListener('click', e => {
+    const opt = e.target.closest('.view-opt');
+    if (opt && !opt.classList.contains('is-active')) setView(opt.dataset.view);
   });
 
   // Expose reset so exitAdmin() can clean up
