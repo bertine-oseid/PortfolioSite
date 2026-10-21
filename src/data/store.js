@@ -45,6 +45,7 @@
     overridesEn:   'portfolio_overrides_en',
     avatar:        'portfolio_avatar',
     lang:          'portfolio_lang',
+    accent:        'portfolio_accent',
   };
 
   // ── What init() loaded, and from where ('kv' | 'file') ───────
@@ -114,6 +115,12 @@
     return Array.isArray(tiles) && tiles.length ? tiles : null;
   }
 
+  // ── Store.savedAccent() ───────────────────────────────────────
+  // The saved accent colour (KV or data.json), or null.
+  function savedAccent() {
+    return loaded?.accent || null;
+  }
+
   // ── Store.syncLocalFromServer() ───────────────────────────────
   // Overwrites this browser's editing state with the content saved
   // in KV. Runs at most once per page load; unsaved edits from an
@@ -148,6 +155,8 @@
     if (loaded.avatar) localStorage.setItem(LS.avatar, loaded.avatar);
     else               localStorage.removeItem(LS.avatar);
     if (loaded.lang)   localStorage.setItem(LS.lang, loaded.lang);
+    if (loaded.accent) localStorage.setItem(LS.accent, loaded.accent);
+    else               localStorage.removeItem(LS.accent);
   }
 
   // ── Build the snapshot that gets saved ────────────────────────
@@ -162,6 +171,7 @@
       _note: "Portfolio saved state. Saved from Edit Mode to Cloudflare KV; data.json is only the fallback.",
       lang:   localStorage.getItem(LS.lang)   || null,
       avatar: localStorage.getItem(LS.avatar) || null,
+      accent: window.Accent?.normalize(localStorage.getItem(LS.accent)) || null,
       overrides: {
         no: parse(LS.overridesNo, {}),
         en: parse(LS.overridesEn, {}),
@@ -215,6 +225,6 @@
   }
 
   // ── Public API ────────────────────────────────────────────────
-  window.Store = { init, savedLayout, syncLocalFromServer, save };
+  window.Store = { init, savedLayout, savedAccent, syncLocalFromServer, save };
 
 })();

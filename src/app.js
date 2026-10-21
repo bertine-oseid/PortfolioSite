@@ -53,6 +53,7 @@ function enterAdmin() {
 function exitAdmin() {
   // Always kill mobile preview before leaving Edit Mode
   if (typeof window._resetMobilePreview === 'function') window._resetMobilePreview();
+  if (typeof window._closeAccentPanel === 'function') window._closeAccentPanel();
   I18N.setAdminMode(false);
   syncAdminUI();
   applyLayout(true);
@@ -1085,6 +1086,103 @@ document.getElementById('exportDataBtn')?.addEventListener('click', async e => {
 
   // Expose reset so exitAdmin() can clean up
   window._resetMobilePreview = resetPreview;
+})();
+
+// ── Accent colour picker (dot in the bottom toolbar) ──────────
+// Changes show on the page at once; Lagre saves them to KV.
+(function () {
+  const dot     = document.getElementById('accentDot');
+  const panel   = document.getElementById('accentPanel');
+  const picker  = document.getElementById('accentColor');
+  const hex     = document.getElementById('accentHex');
+  const error   = document.getElementById('accentHexError');
+  const warning = document.getElementById('accentWarning');
+  const reset   = document.getElementById('accentReset');
+  if (!dot || !panel || !window.Accent) return;
+
+  const fmt = n => n.toFixed(1).replace('.', ',') + ':1';
+
+  function showWarning(color) {
+    const { light, dark } = Accent.check(color);
+    const tail = ' Tekst i aksentfargen kan være vanskelig å lese – anbefalt er minst 4,5:1.';
+    let msg = '';
+    if (!light.ok && !dark.ok) {
+      msg = `Lav kontrast i både lys og mørk modus (lys ${fmt(light.ratio)}, mørk ${fmt(dark.ratio)}).` + tail;
+    } else if (!light.ok) {
+      msg = `Lav kontrast i lys modus (${fmt(light.ratio)}).` + tail;
+    } else if (!dark.ok) {
+      msg = `Lav kontrast i mørk modus (${fmt(dark.ratio)}).` + tail;
+    }
+    warning.textContent = msg;
+    warning.hidden = !msg;
+  }
+
+  // Show a colour in the panel fields (does not change it).
+  // While typing in the hex field, leave that field alone.
+  function sync(color, fromHex) {
+    picker.value = color;
+    if (!fromHex) hex.value = color;
+    showWarning(color);
+  }
+
+  function choose(value, fromHex) {
+    const color = Accent.setEdited(value);
+    if (!color) return false;
+    error.textContent = '';
+    sync(color, fromHex);
+    return true;
+  }
+
+  function open() {
+    error.textContent = '';
+    sync(Accent.current());
+    hex.value = Accent.current();
+    panel.hidden = false;
+    dot.setAttribute('aria-expanded', 'true');
+  }
+
+  function close() {
+    panel.hidden = true;
+    dot.setAttribute('aria-expanded', 'false');
+  }
+
+  dot.addEventListener('click', () => (panel.hidden ? open() : close()));
+
+  picker.addEventListener('input', () => choose(picker.value));
+
+  // Apply as soon as the code is complete; complain only on leave/Enter
+  hex.addEventListener('input', () => {
+    if (Accent.normalize(hex.value)) choose(hex.value, true);
+  });
+  function commitHex() {
+    if (Accent.normalize(hex.value)) {
+      choose(hex.value);
+      hex.value = Accent.current();
+    } else if (hex.value.trim()) {
+      error.textContent = 'Ugyldig hex-kode. Skriv for eksempel #2563eb.';
+    }
+  }
+  hex.addEventListener('blur', commitHex);
+  hex.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); commitHex(); }
+  });
+
+  reset.addEventListener('click', () => {
+    choose(Accent.defaultColor());
+    hex.value = Accent.current();
+  });
+
+  // Close on outside click or Escape. Capture phase: tiles stop click
+  // propagation in Edit Mode, so a bubbling listener would miss them.
+  document.addEventListener('pointerdown', e => {
+    if (!panel.hidden && !e.target.closest('.accent-picker')) close();
+  }, true);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !panel.hidden) { close(); dot.focus(); }
+  });
+
+  // Leaving Edit Mode closes the panel
+  window._closeAccentPanel = close;
 })();
 
 // ── Init ──────────────────────────────────────────────────────

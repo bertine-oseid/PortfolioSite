@@ -4,8 +4,13 @@
 
 :root {
   --accent: #f97316;
-  --accent-light: #fff7ed;
-  --accent-dark: #c2410c;
+  /* Readable text on accent backgrounds — set by accent.js */
+  --on-accent: #1a1a1a;
+  /* Derived from --accent so they follow the colour picker.
+     --accent-dark is the hover shade; accent.js shifts it lighter
+     when the text on the accent is dark. */
+  --accent-light: color-mix(in srgb, var(--accent) 8%, #fff);
+  --accent-dark: color-mix(in srgb, var(--accent) 78%, #fff);
 
   --bg: #f5f6f8;
   --bg-card: #ffffff;
@@ -49,7 +54,7 @@
   --text-muted: #57534e;
   --border: rgba(255,255,255,0.08);
   --border-hover: rgba(255,255,255,0.16);
-  --accent-light: #1c1007;
+  --accent-light: color-mix(in srgb, var(--accent) 12%, #111110);
   --shadow: 0 1px 3px rgba(0,0,0,0.3);
   --shadow-hover: 0 4px 16px rgba(0,0,0,0.5);
 }
@@ -187,7 +192,7 @@ body {
 }
 
 [data-theme="dark"] .nav-edit-toggle.is-active {
-  background: rgba(249, 115, 22, 0.15);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
 /* ---- NAV: PHONES (≤ 680px) ----
@@ -279,7 +284,7 @@ body {
   justify-content: center;
   font-family: var(--font-serif);
   font-size: 36px;
-  color: #fff;
+  color: var(--on-accent);
   margin-bottom: 22px;
   flex-shrink: 0;
 }
@@ -357,7 +362,7 @@ body {
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-serif);
   font-size: 22px;
-  color: white;
+  color: var(--on-accent);
   overflow: hidden;
 }
 .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -506,7 +511,7 @@ body {
 .tile-text.quote-style .tile-text-content {
   font-family: var(--font-serif);
   font-size: 18px;
-  color: white;
+  color: var(--on-accent);
   line-height: 1.55;
 }
 
@@ -963,7 +968,7 @@ article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
 }
 .aep-save {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 .aep-save:hover   { background: var(--accent-dark); border-color: var(--accent-dark); }
@@ -1165,7 +1170,7 @@ article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
 .i18n-btn-yes {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .i18n-btn-yes:hover {
@@ -1254,8 +1259,8 @@ body:not(.admin-page) .admin-toggle-btn { display: none; }
 .admin-toggle-btn.is-admin {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
-  box-shadow: 0 4px 18px rgba(249,115,22,0.35);
+  color: var(--on-accent);
+  box-shadow: 0 4px 18px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 .admin-toggle-btn.is-admin .icon-edit,
 .admin-toggle-btn.is-admin .toggle-label-edit { display: none; }
@@ -1264,7 +1269,7 @@ body:not(.admin-page) .admin-toggle-btn { display: none; }
 .admin-toggle-btn.is-admin:hover {
   background: var(--accent-dark);
   border-color: var(--accent-dark);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 /* ============================================================
@@ -1380,7 +1385,7 @@ body:not(.admin-page) .admin-toggle-btn { display: none; }
   padding: 0;
 }
 
-.ac-resize-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.ac-resize-btn:hover { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .ac-edit-btn:hover   { background: var(--bg-card-hover); color: var(--text-primary); }
 .ac-delete-btn:hover { background: #fee2e2; border-color: #ef4444; color: #ef4444; }
 
@@ -1535,12 +1540,103 @@ body:not(.admin-page) .admin-toggle-btn { display: none; }
 }
 .view-opt.is-active {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   cursor: default;
 }
 .view-opt.is-active:hover {
-  background: color-mix(in srgb, var(--accent) 85%, #000);
+  background: var(--accent-dark);
 }
+
+/* Accent colour picker — round dot + small panel, admin mode only */
+.accent-picker {
+  display: none;
+  position: relative;
+}
+.admin-mode .accent-picker { display: flex; align-items: center; }
+.accent-dot {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--bg-card);
+  background: var(--accent);
+  box-shadow: 0 0 0 1px var(--border-hover), var(--shadow);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.accent-dot:hover,
+.accent-dot[aria-expanded="true"] { transform: scale(1.1); }
+.accent-panel {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 0;
+  width: 260px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border-hover);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-hover);
+  white-space: normal;
+}
+.accent-panel[hidden] { display: none; }
+.accent-panel-title { font-size: 13px; font-weight: 600; }
+.accent-panel-row {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  grid-template-areas: "swatch label" "swatch input";
+  column-gap: 10px;
+  align-items: center;
+}
+.accent-color-input {
+  grid-area: swatch;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--border-hover);
+  border-radius: 10px;
+  background: none;
+  cursor: pointer;
+}
+.accent-color-input::-webkit-color-swatch-wrapper { padding: 3px; }
+.accent-color-input::-webkit-color-swatch { border: none; border-radius: 7px; }
+.accent-color-input::-moz-color-swatch { border: none; border-radius: 7px; }
+.accent-hex-label { grid-area: label; font-size: 11px; color: var(--text-secondary); }
+.accent-hex-input {
+  grid-area: input;
+  padding: 6px 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+}
+.accent-hex-error:empty,
+.accent-warning:empty { display: none; }
+.accent-hex-error { font-size: 12px; color: #dc2626; }
+.accent-warning {
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fef3c7;
+  color: #78350f;
+}
+[data-theme="dark"] .accent-warning { background: #3b2a06; color: #fde68a; }
+.accent-reset {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-hover);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.accent-reset:hover { color: var(--text-primary); background: var(--bg-card-hover); }
 
 /* ══════════════════════════════════════════════════════════════
    MOBILE PREVIEW — FLOATING CANVAS
@@ -1827,7 +1923,7 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
 .modal-btn-primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 .modal-btn-primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
 
@@ -1862,7 +1958,7 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
 }
 .form-input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(249,115,22,0.12);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 .form-textarea { resize: vertical; min-height: 96px; line-height: 1.5; }
 .form-select {
@@ -2254,6 +2350,15 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
 
   /* Already looking at the phone layout — the view toggle has no use */
   .admin-mode .view-toggle { display: none; }
+
+  /* Accent panel spans the toolbar width, just above it */
+  .accent-picker { position: static; }
+  .accent-panel {
+    left: 16px;
+    right: 16px;
+    width: auto;
+    bottom: calc(100% + 8px);
+  }
 }
 
 /* ============================================================
@@ -2278,7 +2383,7 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
   white-space: nowrap;
   padding: 6px 13px;
   border-radius: 9999px;
-  box-shadow: 0 2px 12px rgba(249,115,22,0.18), 0 1px 4px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--accent) 18%, transparent), 0 1px 4px rgba(0,0,0,0.08);
   letter-spacing: 0.02em;
   opacity: 1;
 }
@@ -2520,6 +2625,14 @@ body.mobile-preview-on .admin-toggle-btn {
   justify-content: center !important;
   border-radius: 10px !important;
   white-space: nowrap !important;
+}
+
+/* Accent dot centred in the sidebar; panel opens to its right */
+body.mobile-preview-on .accent-picker { justify-content: center; }
+body.mobile-preview-on .accent-panel {
+  bottom: auto;
+  top: -12px;
+  left: calc(100% + 24px);
 }
 
 /* View toggle in the sidebar: both options share the width */
