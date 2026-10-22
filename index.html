@@ -13,6 +13,20 @@
   <meta property="og:type"  content="website" />
   <meta property="og:title" content="Bertine Oseid" />
   <meta property="og:description" content="Personlig portfolio, lenker og blogg" />
+  <!-- Before any CSS paints: apply the saved theme and the last-seen
+       accent colour, so the page never flashes light or orange first -->
+  <script>
+    (function () {
+      var root = document.documentElement;
+      try {
+        root.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+        var seen = JSON.parse(localStorage.getItem('portfolio_accent_seen') || 'null');
+        if (seen) for (var k in seen) if (/^--accent|^--on-accent/.test(k)) root.style.setProperty(k, seen[k]);
+      } catch (e) {
+        root.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -261,12 +275,16 @@
   <!-- i18n must load before components so I18N is available -->
   <script src="src/components/i18n.js"></script>
 
+  <!-- External libraries load with defer: the page (and the cached
+       tiles) can show without waiting for them. They run before
+       DOMContentLoaded; app.js finishes their setup then.
+       Versions are pinned (tested with our code) — update on purpose. -->
   <!-- Markdown parser -->
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js"></script>
   <!-- Drag-and-drop -->
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-  <!-- Cropper.js — must load before app.js initialises the crop modal controller -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <!-- Cropper.js — used only when the crop modal opens -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 
   <!-- Components -->
   <script src="src/components/grid.js"></script>

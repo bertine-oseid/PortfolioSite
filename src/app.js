@@ -9,10 +9,15 @@
   document.documentElement.setAttribute('data-theme', saved);
 })();
 
+let themeAnimTimer;
 document.getElementById('themeToggle').addEventListener('click', () => {
-  const current = document.documentElement.getAttribute('data-theme');
-  const next = current === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
+  const root = document.documentElement;
+  const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  // Soft fade for this switch only
+  root.classList.add('theme-anim');
+  clearTimeout(themeAnimTimer);
+  themeAnimTimer = setTimeout(() => root.classList.remove('theme-anim'), 400);
+  root.setAttribute('data-theme', next);
   localStorage.setItem('theme', next);
 });
 
@@ -986,6 +991,11 @@ function openAvatarEditor(e) {
   if (!modal) return; // guard: modal not in DOM yet
 
   function open(src, callback) {
+    // Cropper loads with defer; a click in the first moment may beat it
+    if (typeof Cropper === 'undefined') {
+      I18N.showToast('Bildeverktøyet laster fortsatt – prøv igjen om et øyeblikk.');
+      return;
+    }
     _callback  = callback;
     imgEl.src  = src;
     modal.classList.add('open');
@@ -1189,7 +1199,35 @@ document.getElementById('exportDataBtn')?.addEventListener('click', async e => {
 
 // ── Init ──────────────────────────────────────────────────────
 (async function loadPortfolioData() {
-  let renderedFromJson = false;
+  // Render one content object (KV / data.json / cached copy).
+  // Returns true when it had tiles for the current breakpoint.
+  function render(json) {
+    // localStorage meta (lang, avatar, overrides) is already seeded,
+    // so the profile sidebar and i18n pick it up before rendering.
+    updateProfileSidebar();
+    const layoutName = getLayoutName();
+    const tiles = json?.layout?.[layoutName];
+    if (!Array.isArray(tiles) || !tiles.length) return false;
+    activeLayout = layoutName; // tell applyLayout the layout is already applied
+    buildGrid(tiles);
+    return true;
+  }
+
+  let shown = null; // JSON of the content currently on screen
+  let hashHandled = false;
+
+  // Visitors: show last visit's copy at once, refresh it below.
+  // /admin always waits for the fresh content before editing.
+  if (window.Store && !I18N.isAdminPage()) {
+    const copy = Store.useCached();
+    if (copy && render(copy)) {
+      shown = JSON.stringify(copy);
+      handleInitialHash();
+      hashHandled = true;
+    }
+  }
+
+  let renderedFromJson = shown !== null;
 
   if (window.Store) {
     const jsonData = await Store.init(); // fetch KV / data.json; returns parsed JSON or null
@@ -1197,24 +1235,13 @@ document.getElementById('exportDataBtn')?.addEventListener('click', async e => {
     // Already in Edit Mode on load: edit from the saved version
     if (I18N.isAdminMode()) Store.syncLocalFromServer();
 
-    if (jsonData) {
-      // Seed localStorage meta from data.json (lang, avatar, overrides)
-      // so that profile sidebar and i18n pick them up before rendering.
-      updateProfileSidebar();
-
-      // Feed the tile array for the current breakpoint directly into
-      // the grid renderer — this is the primary, JSON-driven render path.
-      const layoutName = getLayoutName();
-      const tiles = jsonData.layout?.[layoutName];
-      if (Array.isArray(tiles) && tiles.length) {
-        activeLayout = layoutName; // tell applyLayout the layout is already applied
-        buildGrid(tiles);
-        renderedFromJson = true;
-      }
+    // Re-render only when the fresh content differs from what's shown
+    if (jsonData && JSON.stringify(jsonData) !== shown) {
+      renderedFromJson = render(jsonData) || renderedFromJson;
     }
   }
 
-  // Fallback: no data.json tiles found — render from localStorage + CONFIG as normal
+  // Fallback: no tiles from KV, data.json or the copy — render from localStorage + CONFIG
   if (!renderedFromJson) {
     updateProfileSidebar();
     applyLayout();
@@ -1223,5 +1250,13 @@ document.getElementById('exportDataBtn')?.addEventListener('click', async e => {
   // /admin always opens straight into Edit Mode
   if (I18N.isAdminPage()) enterAdmin();
 
-  handleInitialHash();
+  if (!hashHandled) handleInitialHash();
 })();
+
+// ── Deferred libraries ready ──────────────────────────────────
+// marked / Sortable load with defer and may arrive after the first
+// render: enable drag-and-drop and redo Markdown in an open post.
+document.addEventListener('DOMContentLoaded', () => {
+  initSortable();
+  if (currentPostId) buildPost(currentPostId);
+});

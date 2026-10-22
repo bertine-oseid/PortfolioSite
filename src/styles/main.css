@@ -74,9 +74,11 @@ body {
   background: var(--bg);
   color: var(--text-primary);
   min-height: 100vh;
-  transition: background 0.3s, color 0.3s;
   -webkit-font-smoothing: antialiased;
 }
+/* Fade only when the visitor switches theme (app.js adds the class
+   for a moment); page loads show the right colours immediately */
+html.theme-anim body { transition: background 0.3s, color 0.3s; }
 
 /* ---- NAV ---- */
 .site-header {
