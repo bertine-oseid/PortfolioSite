@@ -277,9 +277,10 @@
 
   <!-- External libraries load with defer: the page (and the cached
        tiles) can show without waiting for them. They run before
-       DOMContentLoaded; app.js finishes their setup then. -->
+       DOMContentLoaded; app.js finishes their setup then.
+       Versions are pinned (tested with our code) — update on purpose. -->
   <!-- Markdown parser -->
-  <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js"></script>
   <!-- Drag-and-drop -->
   <script defer src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
   <!-- Cropper.js — used only when the crop modal opens -->
