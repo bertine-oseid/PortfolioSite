@@ -4,8 +4,16 @@
 
 :root {
   --accent: #f97316;
-  --accent-light: #fff7ed;
-  --accent-dark: #c2410c;
+  /* Readable text on accent backgrounds — set by accent.js */
+  --on-accent: #1a1a1a;
+  /* Derived from --accent so they follow the colour picker.
+     --accent-dark is the hover shade; accent.js shifts it lighter
+     when the text on the accent is dark. */
+  --accent-light: color-mix(in srgb, var(--accent) 8%, #fff);
+  --accent-dark: color-mix(in srgb, var(--accent) 78%, #fff);
+  /* Small text in the accent colour: a per-mode variant that reaches
+     4.5:1 (set by accent.js); buttons and areas use --accent itself */
+  --accent-text: var(--accent-text-light, var(--accent));
 
   --bg: #f5f6f8;
   --bg-card: #ffffff;
@@ -49,7 +57,8 @@
   --text-muted: #57534e;
   --border: rgba(255,255,255,0.08);
   --border-hover: rgba(255,255,255,0.16);
-  --accent-light: #1c1007;
+  --accent-light: color-mix(in srgb, var(--accent) 12%, #111110);
+  --accent-text: var(--accent-text-dark, var(--accent));
   --shadow: 0 1px 3px rgba(0,0,0,0.3);
   --shadow-hover: 0 4px 16px rgba(0,0,0,0.5);
 }
@@ -178,7 +187,7 @@ body {
 /* When edit mode is on: accent border + dot appears */
 .nav-edit-toggle.is-active {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-text);
   background: var(--accent-light);
 }
 
@@ -187,7 +196,55 @@ body {
 }
 
 [data-theme="dark"] .nav-edit-toggle.is-active {
-  background: rgba(249, 115, 22, 0.15);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+/* ---- NAV: PHONES (≤ 680px) ----
+   One row needs ~500px (~635px in Edit Mode), so the nav becomes two rows:
+   name + org.nr. | NO/EN, theme, edit   /   Hjem, Blogg        */
+@media (max-width: 680px) {
+  .site-header { height: auto; }
+  .nav {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    grid-template-areas:
+      "logo  lang  theme edit"
+      "links links links links";
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 8px;
+    padding: 10px 16px;
+  }
+  /* Visitors have no edit button — drop its empty column */
+  body:not(.admin-page) .nav {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "logo  lang  theme"
+      "links links links";
+  }
+  .nav-logo {
+    grid-area: logo;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    margin-right: 0;
+    font-size: 17px;
+    white-space: nowrap;
+  }
+  .org-number { font-size: 10px; }
+  .nav-links { grid-area: links; }
+  .lang-toggle { grid-area: lang; }
+  .theme-toggle { grid-area: theme; width: 32px; height: 32px; }
+  .nav-edit-toggle { grid-area: edit; padding: 7px 10px; }
+  /* Pencil + dot only; the button's aria-label still names it */
+  .nav-edit-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
 }
 
 /* ---- APP WRAPPER ---- */
@@ -231,7 +288,7 @@ body {
   justify-content: center;
   font-family: var(--font-serif);
   font-size: 36px;
-  color: #fff;
+  color: var(--on-accent);
   margin-bottom: 22px;
   flex-shrink: 0;
 }
@@ -309,7 +366,7 @@ body {
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-serif);
   font-size: 22px;
-  color: white;
+  color: var(--on-accent);
   overflow: hidden;
 }
 .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -458,7 +515,7 @@ body {
 .tile-text.quote-style .tile-text-content {
   font-family: var(--font-serif);
   font-size: 18px;
-  color: white;
+  color: var(--on-accent);
   line-height: 1.55;
 }
 
@@ -474,7 +531,7 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 .tile-blog-preview .blog-tile-posts { flex: 1; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
 .blog-tile-post { display: flex; flex-direction: column; gap: 1px; }
@@ -518,7 +575,7 @@ body {
 .blog-card-tags { display: flex; gap: 6px; }
 .blog-card-tag {
   font-size: 12px;
-  color: var(--accent);
+  color: var(--accent-text);
   background: var(--accent-light);
   padding: 2px 10px;
   border-radius: 999px;
@@ -575,7 +632,7 @@ article ul, article ol { margin: 0 0 1.3em 1.4em; }
 article li { margin-bottom: 0.4em; }
 article strong { font-weight: 600; }
 article em { font-style: italic; }
-article a { color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; }
+article a { color: var(--accent-text); text-decoration: underline; text-decoration-thickness: 1px; }
 
 .post-meta {
   font-size: 13px;
@@ -653,6 +710,9 @@ article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
     padding-bottom: 240px !important;
   }
   .tile[data-size="2x2"] { grid-column: span 2; grid-row: span 2; }
+
+  /* The sidebar strip already shows the profile right above the grid */
+  .tile-profile { display: none; }
 }
 
 @media (max-width: 420px) {
@@ -912,7 +972,7 @@ article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
 }
 .aep-save {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 .aep-save:hover   { background: var(--accent-dark); border-color: var(--accent-dark); }
@@ -943,7 +1003,7 @@ article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
 .aep-upload-btn:hover {
   background: var(--bg-card-hover);
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-text);
 }
 /* Hide the native file input — the label acts as the trigger */
 .aep-file-input {
@@ -1012,7 +1072,7 @@ article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
 .crop-zoom-btn:hover {
   background: var(--bg-card-hover);
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-text);
 }
 .crop-zoom-label {
   font-size: 11px;
@@ -1114,7 +1174,7 @@ article hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
 .i18n-btn-yes {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .i18n-btn-yes:hover {
@@ -1203,8 +1263,8 @@ body:not(.admin-page) .admin-toggle-btn { display: none; }
 .admin-toggle-btn.is-admin {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
-  box-shadow: 0 4px 18px rgba(249,115,22,0.35);
+  color: var(--on-accent);
+  box-shadow: 0 4px 18px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 .admin-toggle-btn.is-admin .icon-edit,
 .admin-toggle-btn.is-admin .toggle-label-edit { display: none; }
@@ -1213,7 +1273,7 @@ body:not(.admin-page) .admin-toggle-btn { display: none; }
 .admin-toggle-btn.is-admin:hover {
   background: var(--accent-dark);
   border-color: var(--accent-dark);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 /* ============================================================
@@ -1329,7 +1389,7 @@ body:not(.admin-page) .admin-toggle-btn { display: none; }
   padding: 0;
 }
 
-.ac-resize-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.ac-resize-btn:hover { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .ac-edit-btn:hover   { background: var(--bg-card-hover); color: var(--text-primary); }
 .ac-delete-btn:hover { background: #fee2e2; border-color: #ef4444; color: #ef4444; }
 
@@ -1368,13 +1428,13 @@ body:not(.admin-page) .admin-toggle-btn { display: none; }
   text-align: left;
 }
 .ac-size-opt:hover  { background: var(--bg); color: var(--text-primary); }
-.ac-size-opt.active { background: var(--accent-light); color: var(--accent); }
+.ac-size-opt.active { background: var(--accent-light); color: var(--accent-text); }
 .ac-size-hint {
   font-size: 11px;
   font-weight: 400;
   color: var(--text-muted);
 }
-.ac-size-opt.active .ac-size-hint { color: var(--accent); opacity: 0.7; }
+.ac-size-opt.active .ac-size-hint { color: var(--accent-text); opacity: 0.7; }
 
 /* ============================================================
    UNIFIED ADMIN CONTROL BAR
@@ -1452,38 +1512,135 @@ body:not(.admin-page) .admin-toggle-btn { display: none; }
   color: var(--bg);
 }
 
-/* Mobile Preview toggle button — admin mode only */
-.mobile-preview-btn {
+/* 16:9 / 9:16 view toggle — admin mode only.
+   The selected option uses --accent, so it follows the accent colour. */
+.view-toggle {
   display: none;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid var(--border-hover);
+  background: var(--bg-card);
+  box-shadow: var(--shadow);
+  white-space: nowrap;
+}
+.admin-mode .view-toggle { display: flex; }
+.view-opt {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.view-opt:hover:not(.is-active) {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+.view-opt.is-active {
+  background: var(--accent);
+  color: var(--on-accent);
+  cursor: default;
+}
+.view-opt.is-active:hover {
+  background: var(--accent-dark);
+}
+
+/* Accent colour picker — round dot + small panel, admin mode only */
+.accent-picker {
+  display: none;
+  position: relative;
+}
+.admin-mode .accent-picker { display: flex; align-items: center; }
+.accent-dot {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--bg-card);
+  background: var(--accent);
+  box-shadow: 0 0 0 1px var(--border-hover), var(--shadow);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.accent-dot:hover,
+.accent-dot[aria-expanded="true"] { transform: scale(1.1); }
+.accent-panel {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 0;
+  width: 260px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border-hover);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-hover);
+  white-space: normal;
+}
+.accent-panel[hidden] { display: none; }
+.accent-panel-title { font-size: 13px; font-weight: 600; }
+.accent-panel-row {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  grid-template-areas: "swatch label" "swatch input";
+  column-gap: 10px;
+  align-items: center;
+}
+.accent-color-input {
+  grid-area: swatch;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--border-hover);
+  border-radius: 10px;
+  background: none;
+  cursor: pointer;
+}
+.accent-color-input::-webkit-color-swatch-wrapper { padding: 3px; }
+.accent-color-input::-webkit-color-swatch { border: none; border-radius: 7px; }
+.accent-color-input::-moz-color-swatch { border: none; border-radius: 7px; }
+.accent-hex-label { grid-area: label; font-size: 11px; color: var(--text-secondary); }
+.accent-hex-input {
+  grid-area: input;
+  padding: 6px 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+}
+.accent-hex-error:empty,
+.accent-warning:empty { display: none; }
+.accent-hex-error { font-size: 12px; color: #dc2626; }
+.accent-warning {
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fef3c7;
+  color: #78350f;
+}
+[data-theme="dark"] .accent-warning { background: #3b2a06; color: #fde68a; }
+.accent-reset {
+  align-self: flex-start;
+  padding: 6px 12px;
   border-radius: 999px;
   border: 1px solid var(--border-hover);
   background: var(--bg-card);
   color: var(--text-secondary);
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  box-shadow: var(--shadow);
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  white-space: nowrap;
 }
-.admin-mode .mobile-preview-btn { display: flex; }
-.mobile-preview-btn:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--text-secondary);
-}
-.mobile-preview-btn.is-active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-.mobile-preview-btn.is-active:hover {
-  background: var(--accent-dark, #ea6c0e);
-  border-color: var(--accent-dark, #ea6c0e);
-}
+.accent-reset:hover { color: var(--text-primary); background: var(--bg-card-hover); }
 
 /* ══════════════════════════════════════════════════════════════
    MOBILE PREVIEW — FLOATING CANVAS
@@ -1770,7 +1927,7 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
 .modal-btn-primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 .modal-btn-primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
 
@@ -1805,7 +1962,7 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
 }
 .form-input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(249,115,22,0.12);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 .form-textarea { resize: vertical; min-height: 96px; line-height: 1.5; }
 .form-select {
@@ -1870,9 +2027,9 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
 .size-btn.active {
   background: var(--accent-light);
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-text);
 }
-.size-btn.active span { color: var(--accent); opacity: 0.7; }
+.size-btn.active span { color: var(--accent-text); opacity: 0.7; }
 
 /* ============================================================
    THUMBNAIL BACKGROUND (link + video tiles)
@@ -1973,7 +2130,7 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
 /* Toolbar button labels never wrap (e.g. "Legg til boks") */
 .add-box-btn,
 .export-data-btn,
-.mobile-preview-btn,
+.view-toggle,
 .admin-toggle-btn { white-space: nowrap; }
 
 /* Mid widths (tablet / small laptop): no centring spacer, a tighter
@@ -1992,7 +2149,7 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
 
 .dock-btn:hover {
   background: var(--accent-light);
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 /* ============================================================
@@ -2195,8 +2352,17 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
     padding: 8px 14px;
   }
 
-  /* Already looking at the phone layout — the preview toggle has no use */
-  .admin-mode .mobile-preview-btn { display: none; }
+  /* Already looking at the phone layout — the view toggle has no use */
+  .admin-mode .view-toggle { display: none; }
+
+  /* Accent panel spans the toolbar width, just above it */
+  .accent-picker { position: static; }
+  .accent-panel {
+    left: 16px;
+    right: 16px;
+    width: auto;
+    bottom: calc(100% + 8px);
+  }
 }
 
 /* ============================================================
@@ -2212,7 +2378,7 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
 
   /* Matches nav Edit button — white pill with orange accent border */
   background: var(--bg-card);
-  color: var(--accent);
+  color: var(--accent-text);
   border: 1.5px solid var(--accent);
   font-family: var(--font-sans);
   font-size: 11px;
@@ -2221,7 +2387,7 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
   white-space: nowrap;
   padding: 6px 13px;
   border-radius: 9999px;
-  box-shadow: 0 2px 12px rgba(249,115,22,0.18), 0 1px 4px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--accent) 18%, transparent), 0 1px 4px rgba(0,0,0,0.08);
   letter-spacing: 0.02em;
   opacity: 1;
 }
@@ -2251,7 +2417,7 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
 /* Dark mode variant */
 [data-theme="dark"] .edit-cursor-bubble {
   background: var(--bg-card);
-  color: var(--accent);
+  color: var(--accent-text);
   border-color: var(--accent);
 }
 
@@ -2324,6 +2490,8 @@ body.admin-mode #page-grid.mobile-preview-active .tile * {
   padding: 16px 18px !important;
   gap: 10px !important;
 }
+/* Mirrors the ≤768px rule: the sidebar strip already shows the profile */
+#page-grid.mobile-preview-active .tile-profile { display: none !important; }
 #page-grid.mobile-preview-active .profile-avatar {
   width: 52px !important;
   height: 52px !important;
@@ -2453,7 +2621,7 @@ body.mobile-preview-on .admin-bar-right {
 }
 
 /* Action buttons fill the sidebar width */
-body.mobile-preview-on .mobile-preview-btn,
+body.mobile-preview-on .view-toggle,
 body.mobile-preview-on .export-data-btn,
 body.mobile-preview-on .add-box-btn,
 body.mobile-preview-on .admin-toggle-btn {
@@ -2463,9 +2631,18 @@ body.mobile-preview-on .admin-toggle-btn {
   white-space: nowrap !important;
 }
 
-/* Mobile Preview button already active — give it a compact label */
-body.mobile-preview-on .mobile-preview-btn {
-  font-size: 12px !important;
+/* Accent dot centred in the sidebar; panel opens to its right */
+body.mobile-preview-on .accent-picker { justify-content: center; }
+body.mobile-preview-on .accent-panel {
+  bottom: auto;
+  top: -12px;
+  left: calc(100% + 24px);
+}
+
+/* View toggle in the sidebar: both options share the width */
+body.mobile-preview-on .view-opt {
+  flex: 1;
+  font-size: 12px;
 }
 
 

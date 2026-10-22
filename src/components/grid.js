@@ -180,7 +180,8 @@ function buildGrid(orderedTiles) {
   const grid = document.getElementById('bentoGrid');
   if (!grid) return;
 
-  document.documentElement.style.setProperty('--accent', CONFIG.accentColor || '#f97316');
+  // Saved colour for visitors, the one being edited in Edit Mode
+  if (window.Accent) Accent.applyCurrent();
 
   const tiles = orderedTiles || CONFIG.tiles;
   const html = tiles.map(tile => {

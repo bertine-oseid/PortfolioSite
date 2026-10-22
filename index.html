@@ -143,9 +143,24 @@
 
       <!-- Right slot: Rediger / Ferdig toggle (always visible) -->
       <div class="admin-bar-right">
-        <button id="mobilePreviewBtn" class="mobile-preview-btn" aria-label="Vis siden slik den ser ut på mobil">
-          📱 Mobilvisning
-        </button>
+        <div class="accent-picker">
+          <button type="button" class="accent-dot" id="accentDot" aria-label="Velg aksentfarge" title="Aksentfarge" aria-expanded="false" aria-controls="accentPanel"></button>
+          <div class="accent-panel" id="accentPanel" role="dialog" aria-label="Aksentfarge" hidden>
+            <div class="accent-panel-title">Aksentfarge</div>
+            <div class="accent-panel-row">
+              <input type="color" id="accentColor" class="accent-color-input" aria-label="Velg farge" />
+              <label class="accent-hex-label" for="accentHex">Hex-kode</label>
+              <input type="text" id="accentHex" class="form-input accent-hex-input" maxlength="7" spellcheck="false" autocomplete="off" placeholder="#f97316" />
+            </div>
+            <p class="accent-hex-error" id="accentHexError" role="alert"></p>
+            <p class="accent-warning" id="accentWarning" role="status"></p>
+            <button type="button" class="accent-reset" id="accentReset">Tilbakestill</button>
+          </div>
+        </div>
+        <div class="view-toggle" id="viewToggle" role="group" aria-label="Visning">
+          <button type="button" class="view-opt is-active" data-view="desktop" aria-pressed="true" title="PC-oppsett">16:9</button>
+          <button type="button" class="view-opt" data-view="mobile" aria-pressed="false" title="Mobiloppsett">9:16</button>
+        </div>
         <button id="exportDataBtn" class="export-data-btn" aria-label="Lagre endringer">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           <span class="save-label">Lagre</span>
@@ -239,6 +254,7 @@
 
   <!-- Data -->
   <script src="src/data/config.js"></script>
+  <script src="src/components/accent.js"></script>
   <script src="src/data/blog-posts.js"></script>
   <script src="src/data/store.js"></script>
 

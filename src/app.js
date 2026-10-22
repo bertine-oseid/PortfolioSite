@@ -53,6 +53,7 @@ function enterAdmin() {
 function exitAdmin() {
   // Always kill mobile preview before leaving Edit Mode
   if (typeof window._resetMobilePreview === 'function') window._resetMobilePreview();
+  if (typeof window._closeAccentPanel === 'function') window._closeAccentPanel();
   I18N.setAdminMode(false);
   syncAdminUI();
   applyLayout(true);
@@ -1059,35 +1060,131 @@ document.getElementById('exportDataBtn')?.addEventListener('click', async e => {
 // applyLayout('mobile') would filter through CONFIG.layouts.mobile
 // which only knows about stock tile IDs, dropping any custom tiles.
 (function () {
-  const btn       = document.getElementById('mobilePreviewBtn');
+  const group     = document.getElementById('viewToggle');
   const workspace = document.getElementById('page-grid');
-  if (!btn || !workspace) return;
+  if (!group || !workspace) return;
 
-  // The label says what a click will switch TO
-  function setLabel(active) {
-    btn.textContent = active ? '🖥️ PC-visning' : '📱 Mobilvisning';
-    btn.setAttribute('aria-label', active
-      ? 'Vis siden slik den ser ut på PC'
-      : 'Vis siden slik den ser ut på mobil');
-  }
-
-  function resetPreview() {
-    workspace.classList.remove('mobile-preview-active');
-    document.body.classList.remove('mobile-preview-on');
-    btn.classList.remove('is-active');
-    setLabel(false);
-  }
-
-  btn.addEventListener('click', () => {
-    const active = workspace.classList.toggle('mobile-preview-active');
-    document.body.classList.toggle('mobile-preview-on', active);
-    btn.classList.toggle('is-active', active);
-    setLabel(active);
+  // view: 'desktop' (16:9) or 'mobile' (9:16)
+  function setView(view) {
+    const mobile = view === 'mobile';
+    workspace.classList.toggle('mobile-preview-active', mobile);
+    document.body.classList.toggle('mobile-preview-on', mobile);
+    group.querySelectorAll('.view-opt').forEach(opt => {
+      const on = opt.dataset.view === view;
+      opt.classList.toggle('is-active', on);
+      opt.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
     // No re-render — CSS handles the reflow
+  }
+
+  function resetPreview() { setView('desktop'); }
+
+  group.addEventListener('click', e => {
+    const opt = e.target.closest('.view-opt');
+    if (opt && !opt.classList.contains('is-active')) setView(opt.dataset.view);
   });
 
   // Expose reset so exitAdmin() can clean up
   window._resetMobilePreview = resetPreview;
+})();
+
+// ── Accent colour picker (dot in the bottom toolbar) ──────────
+// Changes show on the page at once; Lagre saves them to KV.
+(function () {
+  const dot     = document.getElementById('accentDot');
+  const panel   = document.getElementById('accentPanel');
+  const picker  = document.getElementById('accentColor');
+  const hex     = document.getElementById('accentHex');
+  const error   = document.getElementById('accentHexError');
+  const warning = document.getElementById('accentWarning');
+  const reset   = document.getElementById('accentReset');
+  if (!dot || !panel || !window.Accent) return;
+
+  const fmt = n => n.toFixed(1).replace('.', ',') + ':1';
+
+  function showWarning(color) {
+    const { light, dark } = Accent.check(color);
+    // Small text gets an automatic darker/lighter variant (4,5:1);
+    // this warns about the colour itself on buttons and large areas.
+    const tail = ' Knapper og flater i aksentfargen kan være vanskelige å se – anbefalt er minst 3:1.';
+    let msg = '';
+    if (!light.ok && !dark.ok) {
+      msg = `Lav kontrast i både lys og mørk modus (lys ${fmt(light.ratio)}, mørk ${fmt(dark.ratio)}).` + tail;
+    } else if (!light.ok) {
+      msg = `Lav kontrast i lys modus (${fmt(light.ratio)}).` + tail;
+    } else if (!dark.ok) {
+      msg = `Lav kontrast i mørk modus (${fmt(dark.ratio)}).` + tail;
+    }
+    warning.textContent = msg;
+    warning.hidden = !msg;
+  }
+
+  // Show a colour in the panel fields (does not change it).
+  // While typing in the hex field, leave that field alone.
+  function sync(color, fromHex) {
+    picker.value = color;
+    if (!fromHex) hex.value = color;
+    showWarning(color);
+  }
+
+  function choose(value, fromHex) {
+    const color = Accent.setEdited(value);
+    if (!color) return false;
+    error.textContent = '';
+    sync(color, fromHex);
+    return true;
+  }
+
+  function open() {
+    error.textContent = '';
+    sync(Accent.current());
+    hex.value = Accent.current();
+    panel.hidden = false;
+    dot.setAttribute('aria-expanded', 'true');
+  }
+
+  function close() {
+    panel.hidden = true;
+    dot.setAttribute('aria-expanded', 'false');
+  }
+
+  dot.addEventListener('click', () => (panel.hidden ? open() : close()));
+
+  picker.addEventListener('input', () => choose(picker.value));
+
+  // Apply as soon as the code is complete; complain only on leave/Enter
+  hex.addEventListener('input', () => {
+    if (Accent.normalize(hex.value)) choose(hex.value, true);
+  });
+  function commitHex() {
+    if (Accent.normalize(hex.value)) {
+      choose(hex.value);
+      hex.value = Accent.current();
+    } else if (hex.value.trim()) {
+      error.textContent = 'Ugyldig hex-kode. Skriv for eksempel #2563eb.';
+    }
+  }
+  hex.addEventListener('blur', commitHex);
+  hex.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); commitHex(); }
+  });
+
+  reset.addEventListener('click', () => {
+    choose(Accent.defaultColor());
+    hex.value = Accent.current();
+  });
+
+  // Close on outside click or Escape. Capture phase: tiles stop click
+  // propagation in Edit Mode, so a bubbling listener would miss them.
+  document.addEventListener('pointerdown', e => {
+    if (!panel.hidden && !e.target.closest('.accent-picker')) close();
+  }, true);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !panel.hidden) { close(); dot.focus(); }
+  });
+
+  // Leaving Edit Mode closes the panel
+  window._closeAccentPanel = close;
 })();
 
 // ── Init ──────────────────────────────────────────────────────
