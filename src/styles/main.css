@@ -109,6 +109,9 @@ body {
   display: flex;
   align-items: center;
   gap: 20px;
+  /* Name in capitals; the HTML keeps normal case so screen readers
+     read it as a name. .org-number has its own uppercase styling. */
+  text-transform: uppercase;
 }
 
 .org-number {
@@ -236,6 +239,10 @@ body {
   .lang-toggle { grid-area: lang; }
   .theme-toggle { grid-area: theme; width: 32px; height: 32px; }
   .nav-edit-toggle { grid-area: edit; padding: 7px 10px; }
+  /* Smallest phones: the capitalised name needs a little less room */
+  @media (max-width: 360px) {
+    .nav-logo { font-size: 15px; }
+  }
   /* Pencil + dot only; the button's aria-label still names it */
   .nav-edit-label {
     position: absolute;
