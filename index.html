@@ -13,6 +13,20 @@
   <meta property="og:type"  content="website" />
   <meta property="og:title" content="Bertine Oseid" />
   <meta property="og:description" content="Personlig portfolio, lenker og blogg" />
+  <!-- Before any CSS paints: apply the saved theme and the last-seen
+       accent colour, so the page never flashes light or orange first -->
+  <script>
+    (function () {
+      var root = document.documentElement;
+      try {
+        root.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+        var seen = JSON.parse(localStorage.getItem('portfolio_accent_seen') || 'null');
+        if (seen) for (var k in seen) if (/^--accent|^--on-accent/.test(k)) root.style.setProperty(k, seen[k]);
+      } catch (e) {
+        root.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />

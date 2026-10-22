@@ -9,10 +9,15 @@
   document.documentElement.setAttribute('data-theme', saved);
 })();
 
+let themeAnimTimer;
 document.getElementById('themeToggle').addEventListener('click', () => {
-  const current = document.documentElement.getAttribute('data-theme');
-  const next = current === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
+  const root = document.documentElement;
+  const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  // Soft fade for this switch only
+  root.classList.add('theme-anim');
+  clearTimeout(themeAnimTimer);
+  themeAnimTimer = setTimeout(() => root.classList.remove('theme-anim'), 400);
+  root.setAttribute('data-theme', next);
   localStorage.setItem('theme', next);
 });
 

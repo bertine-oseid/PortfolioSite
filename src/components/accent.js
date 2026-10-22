@@ -17,6 +17,7 @@
 
   const DEFAULT = '#f97316';
   const LS_KEY  = 'portfolio_accent';
+  const SEEN_KEY = 'portfolio_accent_seen'; // last applied, for <head>
 
   // Page and card backgrounds — mirror :root and [data-theme="dark"]
   // in main.css. The accent sits on both.
@@ -121,6 +122,16 @@
     // Hover shade moves away from the text colour, so it stays readable
     root.setProperty('--accent-dark',
       `color-mix(in srgb, ${color} 78%, ${text === '#ffffff' ? '#000' : '#fff'})`);
+    // Remembered for the next visit: the inline script in <head> applies
+    // these before the page paints, so there's no orange flash. Not in
+    // Edit Mode — an unsaved test colour isn't what visitors see.
+    if (!window.I18N?.isAdminMode?.()) {
+      const seen = {};
+      for (const k of ['--accent', '--on-accent', '--accent-text-light', '--accent-text-dark', '--accent-dark']) {
+        seen[k] = root.getPropertyValue(k);
+      }
+      try { localStorage.setItem(SEEN_KEY, JSON.stringify(seen)); } catch {}
+    }
     return color;
   }
 
