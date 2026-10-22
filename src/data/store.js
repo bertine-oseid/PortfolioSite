@@ -53,6 +53,10 @@
   let source = null;
   let synced = false;
 
+  // Copy of the last loaded content, so returning visitors see the
+  // page at once while the fresh version loads in the background
+  const CACHE_KEY = 'portfolio_content_cache';
+
   // ── Seed a localStorage key only when it is currently absent ─
   function seedIfEmpty(key, value) {
     if (localStorage.getItem(key) === null && value !== null && value !== undefined) {
@@ -60,15 +64,39 @@
     }
   }
 
-  // ── Apply meta fields from data.json into localStorage ───────
-  // Only seeds keys that are not already set on this device.
-  function seedMeta(json) {
-    if (json.lang)   seedIfEmpty(LS.lang,   json.lang);
-    if (json.avatar) seedIfEmpty(LS.avatar, json.avatar);
+  // ── Apply meta fields from the content into localStorage ─────
+  // Visitors always get the saved texts and photo from KV. On /admin,
+  // or while KV is still empty (content from data.json), existing
+  // local edits are kept and keys are only seeded when absent.
+  // The language stays the visitor's own choice.
+  function seedMeta(json, from) {
+    if (json.lang) seedIfEmpty(LS.lang, json.lang);
 
     const ov = json.overrides || {};
+    if (from === 'kv' && !window.I18N?.isAdminPage?.()) {
+      if (json.avatar) localStorage.setItem(LS.avatar, json.avatar);
+      else             localStorage.removeItem(LS.avatar);
+      localStorage.setItem(LS.overridesNo, JSON.stringify(ov.no || {}));
+      localStorage.setItem(LS.overridesEn, JSON.stringify(ov.en || {}));
+      return;
+    }
+
+    if (json.avatar) seedIfEmpty(LS.avatar, json.avatar);
     if (ov.no && Object.keys(ov.no).length) seedIfEmpty(LS.overridesNo, ov.no);
     if (ov.en && Object.keys(ov.en).length) seedIfEmpty(LS.overridesEn, ov.en);
+  }
+
+  // ── Store.useCached() ─────────────────────────────────────────
+  // Loads the copy saved on the last visit (if any) as the current
+  // content and returns it, or null. Store.init() replaces it.
+  function useCached() {
+    let copy = null;
+    try { copy = JSON.parse(localStorage.getItem(CACHE_KEY)); } catch {}
+    if (!copy || !copy.json || !copy.source) return null;
+    loaded = copy.json;
+    source = copy.source;
+    seedMeta(loaded, source);
+    return loaded;
   }
 
   // ── Fetch a JSON url, or null on any failure ─────────────────
@@ -85,7 +113,8 @@
   // ── Store.init() ──────────────────────────────────────────────
   // Fetches the saved content from KV (/api/content). If KV is
   // empty or unreachable, falls back to data.json.
-  // Seeds localStorage meta from the result.
+  // Seeds localStorage meta from the result and keeps a copy for
+  // the next visit (see useCached).
   // Returns the parsed JSON object so the caller can use
   // json.layout.desktop / json.layout.mobile directly, or null if
   // neither source has anything.
@@ -96,11 +125,14 @@
       json = await fetchJson('./data.json?_cb=' + Date.now());
       source = json ? 'file' : null;
     }
-    if (!json) return null;
+    if (!json) return null; // keep any cached copy already in use
     loaded = json;
 
     // Seed meta fields into localStorage for the rest of the app
-    seedMeta(json);
+    seedMeta(json, source);
+
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ source, json })); }
+    catch {} // full storage: just no copy for next time
 
     // Return the raw JSON — the caller decides whether to use the
     // tile arrays or fall back to applyLayout().
@@ -220,11 +252,12 @@
     loaded = snapshot;
     source = 'kv';
     synced = true;
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ source, json: snapshot })); } catch {}
     toast('Lagret! Alle besøkende ser endringene nå.');
     return true;
   }
 
   // ── Public API ────────────────────────────────────────────────
-  window.Store = { init, savedLayout, savedAccent, syncLocalFromServer, save };
+  window.Store = { init, useCached, savedLayout, savedAccent, syncLocalFromServer, save };
 
 })();

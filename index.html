@@ -275,12 +275,15 @@
   <!-- i18n must load before components so I18N is available -->
   <script src="src/components/i18n.js"></script>
 
+  <!-- External libraries load with defer: the page (and the cached
+       tiles) can show without waiting for them. They run before
+       DOMContentLoaded; app.js finishes their setup then. -->
   <!-- Markdown parser -->
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <!-- Drag-and-drop -->
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-  <!-- Cropper.js — must load before app.js initialises the crop modal controller -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <!-- Cropper.js — used only when the crop modal opens -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 
   <!-- Components -->
   <script src="src/components/grid.js"></script>
